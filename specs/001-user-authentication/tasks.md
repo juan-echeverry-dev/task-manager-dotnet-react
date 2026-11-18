@@ -91,7 +91,7 @@ on its own.
   - `GET /health` still returns 200 anonymously.
   - An unexpected exception (test-only anonymous endpoint that throws, in `tests/TaskLane.Api.Tests/Support/ThrowingProbeController.cs`) returns 500 `application/problem+json`. The body contains no `exception`, `stackTrace`, exception message or connection string (FR-015).
   - File: `tests/TaskLane.Api.Tests/AuthenticationByDefaultTests.cs` (the 500 case goes in `tests/TaskLane.Api.Tests/ErrorHandlingTests.cs`)
-- [ ] T013 [P] Add `JwtOptions` in `src/TaskLane.Infrastructure/Identity/JwtOptions.cs`:
+- [X] T013 [P] Add `JwtOptions` in `src/TaskLane.Infrastructure/Identity/JwtOptions.cs`:
   - Section `Authentication:Jwt`, with `Issuer`, `Audience`, `SigningKey` (base64, ≥ 32 bytes decoded) and `LifetimeMinutes` (default 60, range 1–1440).
   - Bind it in `src/TaskLane.Infrastructure/DependencyInjection.cs` with validation and `ValidateOnStart`.
   - Add a clearly marked dev-only key (comment `"_comment": "DEVELOPMENT ONLY — never use outside local development"`) to `src/TaskLane.Api/appsettings.Development.json`.
