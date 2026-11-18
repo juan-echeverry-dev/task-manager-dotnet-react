@@ -301,7 +301,7 @@ on its own.
   - `npm run check`.
 
   Fix any failure.
-- [ ] T050 Run the manual API and SPA checks from `specs/001-user-authentication/quickstart.md` §2–§3, including 360 px width, visible focus, keyboard-only use and a clean console. These checks (FR-017, SC-001, SC-006) are deliberately manual, because jsdom cannot measure layout or console output from a real browser. The user performs the browser part, and the observed results are recorded in the PR description.
+- [X] T050 Run the manual API and SPA checks from `specs/001-user-authentication/quickstart.md` §2–§3, including 360 px width, visible focus, keyboard-only use and a clean console. These checks (FR-017, SC-001, SC-006) are deliberately manual, because jsdom cannot measure layout or console output from a real browser. The user performs the browser part, and the observed results are recorded in the PR description.
 
 ---
 
