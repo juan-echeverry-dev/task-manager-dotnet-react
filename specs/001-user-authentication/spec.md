@@ -10,6 +10,24 @@
 with it, and only signed-in people can reach protected capabilities; the account is stored by the
 system, and a demo account exists for presentations.
 
+## Clarifications
+
+### Session 2026-11-18
+
+- Q: When someone signs out, must the session credential also become unusable on the server, or is
+  discarding it in the browser enough? → A: Discarding it in the browser is enough; a credential
+  copied before sign-out stays valid until it expires (at most 60 minutes). Accepted, documented
+  risk.
+- Q: Which authentication events must be logged, and what must never appear in logs? → A: Log
+  account registration and successful sign-in (with the account identifier) and failed sign-in
+  (event only, without the entered email); never log passwords, session credentials, or emails.
+- Q: What happens when a valid session refers to an account that no longer exists? → A: It is
+  treated exactly like an invalid session: "authentication required", the session is discarded,
+  and the person is sent to sign-in.
+- Q: After signing in, which destinations may the "return to the original screen" redirect lead
+  to? → A: Only existing internal screens of the application; any other value (external,
+  malformed, or unknown) leads to the profile.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Create an account (Priority: P1)
@@ -120,6 +138,11 @@ reach the profile.
 - A session that expires while the person is on a protected screen: the next action redirects to
   sign-in with the expiry message; no partial data is shown.
 - A tampered, malformed, or foreign session credential is treated exactly like no session.
+- A session whose account no longer exists (for example, after the local database is recreated)
+  is treated exactly like no session: the session is discarded and the person is sent to sign-in.
+- A sign-in link whose return destination points outside the application (for example
+  `https://evil.example`) or to an unknown screen: after signing in, the person lands on their
+  profile, never on the external address.
 - Closing the browser tab ends the session; opening the application in a new tab requires signing
   in again.
 - The service is temporarily unreachable during sign-in or registration: the person sees a
@@ -150,7 +173,9 @@ reach the profile.
   session valid for 60 minutes, without automatic renewal.
 - **FR-007**: Failed sign-ins (unknown email or wrong password) MUST produce an identical outcome
   and message, without revealing which part was wrong.
-- **FR-008**: People MUST be able to sign out, ending the session on that device/tab immediately.
+- **FR-008**: People MUST be able to sign out, which immediately discards the session in that
+  browser tab. The system does not keep a record of revoked sessions: a session credential copied
+  before sign-out remains valid until its 60-minute expiry.
 - **FR-009**: The session MUST survive page reloads within the same browser tab and MUST end when
   the tab is closed.
 
@@ -161,10 +186,12 @@ reach the profile.
   and the service status check.
 - **FR-011**: Signed-in people MUST be able to view their own profile: display name, email, and
   registration date. The profile MUST NOT expose any credential data.
-- **FR-012**: Requests without a valid session (missing, expired, malformed, or tampered) to
+- **FR-012**: Requests without a valid session (missing, expired, malformed, tampered, or
+  referring to an account that no longer exists) to
   protected capabilities MUST be refused with an "authentication required" outcome; the
   application MUST then send the person to sign-in and return them to the original screen after
-  signing in.
+  signing in. The return destination MUST be an existing internal screen of the application; any
+  other value (external address, malformed, or unknown screen) MUST lead to the profile instead.
 
 **Security and data**
 
@@ -174,6 +201,10 @@ reach the profile.
   normalized), display name, password representation, and creation timestamp.
 - **FR-015**: Error responses MUST NOT expose internal details (stack traces, queries, internal
   identifiers beyond the person's own).
+- **FR-019**: The system MUST log these authentication events: account registered (with the
+  account identifier), sign-in succeeded (with the account identifier), and sign-in failed (event
+  only, without the entered email). Logs MUST NEVER contain passwords, session credentials, or
+  email addresses.
 
 **Demo data**
 
@@ -202,7 +233,8 @@ reach the profile.
 
 - **SC-001**: A new visitor can create an account and sign in within 90 seconds on first attempt.
 - **SC-002**: 100% of protected capabilities refuse access without a valid session (verified by
-  automated tests covering missing, expired, malformed, and tampered sessions).
+  automated tests covering missing, expired, malformed, and tampered sessions, and sessions whose
+  account no longer exists).
 - **SC-003**: 0 stored passwords are readable: inspecting the stored account data never reveals the
   original password, and two accounts with the same password have different stored values.
 - **SC-004**: Failed sign-in outcomes for "unknown email" and "wrong password" are indistinguishable
@@ -212,6 +244,9 @@ reach the profile.
 - **SC-006**: All screens of this feature work without horizontal scrolling at 360 px width, are
   completable with keyboard only, and produce no errors or warnings in the browser console during
   the flows described in the user stories.
+- **SC-007**: During automated runs of registration and sign-in (successful and failed), 100% of
+  the expected authentication events are logged, and 0 log entries contain the password, the
+  session credential, or the email used.
 
 ## Assumptions
 
@@ -223,6 +258,9 @@ reach the profile.
 - Returning "email already registered" on registration allows someone to learn whether an email
   has an account; this is accepted for usability because there is no email verification flow.
 - Sessions are per browser tab: opening the application in another tab requires signing in again.
+- Sign-out is not enforced server-side: a session credential obtained before sign-out (for example,
+  by a malicious script) keeps working until it expires. This is an accepted risk, bounded by the
+  60-minute lifetime without renewal.
 - Password rules follow current guidance favoring length over composition rules (no mandatory
   symbols or digits).
 - Timestamps are recorded in UTC and displayed in the person's local time.
