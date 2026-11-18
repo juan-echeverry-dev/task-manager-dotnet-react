@@ -19,7 +19,7 @@ Request:
 |---|---|---|
 | `201 Created` | Account created. `Location: /api/users/me` | `UserProfile` |
 | `400 Bad Request` | One or more fields invalid | Validation Problem Details: `errors` keyed by `displayName`, `email`, `password` (array of messages each) |
-| `409 Conflict` | Normalized email already registered | Problem Details, `title: "Email already registered"`, `detail: "An account with this email already exists."` |
+| `409 Conflict` | Normalized email already registered | Problem Details, `title: "Email already registered"`, `detail: "An account with this email already exists."` The SPA shows its own field-level wording, defined in [spa-routes.md](spa-routes.md) |
 
 No token is returned: registration never starts a session (FR-005).
 

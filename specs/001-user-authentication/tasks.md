@@ -89,16 +89,18 @@ on its own.
 - [ ] T012 [P] Write failing API tests:
   - A test-only endpoint without `[AllowAnonymous]` returns 401 with Problem Details. Add it via a test controller in `tests/TaskLane.Api.Tests/Support/ProtectedProbeController.cs`, registered with `AddApplicationPart`.
   - `GET /health` still returns 200 anonymously.
-  - File: `tests/TaskLane.Api.Tests/AuthenticationByDefaultTests.cs`
-- [ ] T013 Implement authentication by default until T012 passes:
-  - `src/TaskLane.Api/Identity/AuthenticationSetup.cs` adds `AddJwtBearer`. It validates issuer, audience, lifetime, signing key and algorithm HS256, uses `ClockSkew = TimeSpan.Zero`, `MapInboundClaims = false`, and the DI `TimeProvider`.
-  - It reads `JwtOptions` (T014) and sets the fallback policy `RequireAuthenticatedUser`.
-  - In `src/TaskLane.Api/Program.cs`, add `UseAuthentication`/`UseAuthorization`, and mark `MapHealthChecks`, `MapOpenApi` and `MapScalarApiReference` with `.AllowAnonymous()`.
-- [ ] T014 [P] Add `JwtOptions` in `src/TaskLane.Infrastructure/Identity/JwtOptions.cs`:
+  - An unexpected exception (test-only anonymous endpoint that throws, in `tests/TaskLane.Api.Tests/Support/ThrowingProbeController.cs`) returns 500 `application/problem+json`. The body contains no `exception`, `stackTrace`, exception message or connection string (FR-015).
+  - File: `tests/TaskLane.Api.Tests/AuthenticationByDefaultTests.cs` (the 500 case goes in `tests/TaskLane.Api.Tests/ErrorHandlingTests.cs`)
+- [ ] T013 [P] Add `JwtOptions` in `src/TaskLane.Infrastructure/Identity/JwtOptions.cs`:
   - Section `Authentication:Jwt`, with `Issuer`, `Audience`, `SigningKey` (base64, ≥ 32 bytes decoded) and `LifetimeMinutes` (default 60, range 1–1440).
   - Bind it in `src/TaskLane.Infrastructure/DependencyInjection.cs` with validation and `ValidateOnStart`.
   - Add a clearly marked dev-only key (comment `"_comment": "DEVELOPMENT ONLY — never use outside local development"`) to `src/TaskLane.Api/appsettings.Development.json`.
   - Cover missing or short keys with a failing-first test in `tests/TaskLane.Infrastructure.Tests/DependencyInjectionTests.cs`.
+- [ ] T014 Implement authentication by default until T012 passes. Depends on T013 (`JwtOptions`).
+  - `src/TaskLane.Api/Identity/AuthenticationSetup.cs` adds `AddJwtBearer`. It validates issuer, audience, lifetime, signing key and algorithm HS256, uses `ClockSkew = TimeSpan.Zero`, `MapInboundClaims = false`, and the DI `TimeProvider`.
+  - It reads `JwtOptions` (T013) and sets the fallback policy `RequireAuthenticatedUser`.
+  - In `src/TaskLane.Api/Program.cs`, add `UseAuthentication`/`UseAuthorization`, and mark `MapHealthChecks`, `MapOpenApi` and `MapScalarApiReference` with `.AllowAnonymous()`.
+  - Make the 500 case of T012 pass: in non-Development environments, the exception handler must not include exception details.
 - [ ] T015 [P] Write failing unit tests for the mapping in `tests/TaskLane.Api.Tests/ResultMappingsTests.cs`:
   - Validation → 400 `ValidationProblemDetails`, with field names in camelCase.
   - Conflict → 409, Unauthorized → 401 and NotFound → 404, each as `ProblemDetails` with `title` and `detail`.
@@ -156,8 +158,9 @@ on its own.
     - Labelled fields for display name, email and password.
     - Client-side Zod errors use the same rules and messages as data-model.md, shown next to their fields with `aria-invalid`/`aria-describedby`.
     - The submit button is disabled while pending, with "Creating account…".
-    - A 400 maps `errors` to fields.
+    - A 400 maps `errors` to fields, keeps display name and email, and clears the password (US1-3).
     - A 409 shows "This email is already registered." on the email field.
+    - Keyboard only: Tab moves through the fields in order and Enter submits (FR-017).
     - A network error shows "We couldn't reach the service. Please try again." and the values are kept except the password.
     - Success navigates to `/sign-in` with the email pre-filled and "Account created. You can now sign in.".
 - [ ] T027 [US1] Implement `frontend/src/features/auth/auth-api.ts` (`register`) and `frontend/src/features/auth/RegisterPage.tsx` (React Hook Form + Zod schema in `frontend/src/features/auth/schemas.ts`, `useMutation`). Add the `/register` route in `frontend/src/app/routes.tsx` and a minimal `/sign-in` placeholder that reads the pre-filled email from navigation state. T026 must then pass.
@@ -209,7 +212,7 @@ on its own.
   - `frontend/src/shared/api/http-client.test.ts`: `request` adds `Authorization: Bearer` when a token is given.
   - `frontend/src/features/auth/return-path.test.ts`: `/profile` ✅; `https://evil.example`, `//evil.example`, `/\evil.example` and `/does-not-exist` → `/profile`; the query string is preserved.
   - `frontend/src/features/auth/session/SessionProvider.test.tsx`: `signIn` stores `{accessToken, expiresAt}` under `tasklane.session`; invalid JSON is discarded.
-  - `frontend/src/features/auth/SignInPage.test.tsx`: labelled fields; disabled "Signing in…" while pending; 401 → "Invalid email or password." with the password cleared; success → safe `returnTo` or `/profile`.
+  - `frontend/src/features/auth/SignInPage.test.tsx`: labelled fields; disabled "Signing in…" while pending; 401 → "Invalid email or password." with the password cleared; a network error → "We couldn't reach the service. Please try again." with the email kept and the password cleared; keyboard-only submit with Enter; success → safe `returnTo` or `/profile`.
   - `frontend/src/features/auth/RequireAuth.test.tsx`: anonymous → `/sign-in?returnTo=%2Fprofile`.
   - `frontend/src/features/profile/ProfilePage.test.tsx`: shows display name, email and member-since date in local format.
 - [ ] T040 [US2] Implement the SPA until T039 passes:
@@ -220,6 +223,7 @@ on its own.
   - Replace the `/sign-in` placeholder with `frontend/src/features/auth/SignInPage.tsx`.
   - Add `frontend/src/features/auth/RequireAuth.tsx`, `frontend/src/features/profile/profile-api.ts` and `frontend/src/features/profile/ProfilePage.tsx`.
   - Add `/profile` behind `RequireAuth` in `frontend/src/app/routes.tsx` and wrap the app with `SessionProvider` in `frontend/src/app/App.tsx`.
+  - Placement: `SessionProvider` (state and storage only, no navigation) wraps `QueryClientProvider` and `RouterProvider` in `App.tsx`. Anything that navigates (guards, and the 401 handling added in T042) runs inside the router, in `RequireAuth` and `frontend/src/shared/layout/AppLayout.tsx`, and calls `useSession()`. `App.tsx` creates the `QueryClient` with `QueryCache`/`MutationCache` `onError` callbacks that publish 401s to the session context, which marks the session as rejected so that `AppLayout` redirects.
 
 **Checkpoint**: US1 and US2 work together: register, sign in, view the profile, and are protected against anonymous access.
 
@@ -247,7 +251,7 @@ on its own.
 ### Implementation for User Story 3
 
 - [ ] T042 [US3] Implement the session lifecycle until T041 passes:
-  - 401 handling via `QueryCache`/`MutationCache` `onError` wired in `frontend/src/features/auth/session/SessionProvider.tsx` and `frontend/src/app/App.tsx`.
+  - 401 handling as placed in T040: `onError` callbacks in `frontend/src/app/App.tsx` notify `frontend/src/features/auth/session/SessionProvider.tsx`, and the redirect is performed in `frontend/src/shared/layout/AppLayout.tsx`.
   - Expiry check in `frontend/src/features/auth/RequireAuth.tsx`.
   - `frontend/src/features/auth/RedirectIfAuthenticated.tsx` wrapping `/sign-in` and `/register` in `frontend/src/app/routes.tsx`.
   - A sign-out button in `frontend/src/features/profile/ProfilePage.tsx`.
@@ -270,6 +274,7 @@ on its own.
   - Seeding twice leaves one user with an unchanged `PasswordHash`.
   - An existing account with the demo email but another password is not modified.
   - Missing `DemoAccount` configuration → no-op.
+  - Also write a failing API test in `tests/TaskLane.Api.Tests/Identity/DemoAccountTests.cs`: in the non-Development test host, signing in with the demo credentials returns 401, so the demo account is never provisioned outside Development (spec Assumptions, FR-016).
 
 ### Implementation for User Story 4
 
@@ -286,7 +291,7 @@ on its own.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T046 [P] Amend `docs/adr/0006-jwt-bearer-authentication.md`: change the claims to `sub` and `jti`; there is no sign-out endpoint and sign-out is client-side only (accepted risk, spec Clarification Q1); clock skew is 0; failed sign-in timing is equalized.
+- [ ] T046 [P] Amend `docs/adr/0006-jwt-bearer-authentication.md`: change the claims to `sub` and `jti`; there is no sign-out endpoint and sign-out is client-side only (accepted risk, spec Clarification Q1); clock skew is 0; failed sign-in timing is equalized. Replace "login" with "sign in" in `docs/adr/0006-jwt-bearer-authentication.md` and `docs/adr/0010-http-api-conventions.md` where it refers to the user action.
 - [ ] T047 [P] Update `docs/architecture.md` with the Identity module slices, the request flow (controller → handler → ports) and the auth pipeline. Update the "Where things go" examples in `CLAUDE.md` only if they changed.
 - [ ] T048 [P] Add sample requests for register, sign-in and me (with a `@token` variable) to `src/TaskLane.Api/TaskLane.Api.http`.
 - [ ] T049 Run the automated gates from `specs/001-user-authentication/quickstart.md` §1:
@@ -296,7 +301,7 @@ on its own.
   - `npm run check`.
 
   Fix any failure.
-- [ ] T050 Run the manual API and SPA checks from `specs/001-user-authentication/quickstart.md` §2–§3, including 360 px width, keyboard-only use and a clean console. The user performs the browser part, and the observed results are recorded in the PR description.
+- [ ] T050 Run the manual API and SPA checks from `specs/001-user-authentication/quickstart.md` §2–§3, including 360 px width, visible focus, keyboard-only use and a clean console. These checks (FR-017, SC-001, SC-006) are deliberately manual, because jsdom cannot measure layout or console output from a real browser. The user performs the browser part, and the observed results are recorded in the PR description.
 
 ---
 
@@ -322,7 +327,7 @@ on its own.
 ### Parallel Opportunities
 
 - **Setup:** T003 and T004.
-- **Foundational:** T005, T007, T009, T012, T014, T015 and T017 touch different files and can be written in parallel.
+- **Foundational:** T005, T007, T009, T012, T013, T015 and T017 touch different files and can be written in parallel.
 - **US1:** T018–T021 (tests) in parallel. Then T022 and T024 in parallel with T023. T026 can start once the contract is fixed.
 - **US2:** T028–T033 in parallel. T034 and T037 in parallel. Frontend T039/T040 in parallel with backend T035–T038.
 - **US4:** can proceed in parallel with US2/US3 once T024 is done.
