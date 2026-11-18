@@ -3,7 +3,9 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
+using TaskLane.Application.Identity.GetProfile;
 using TaskLane.Application.Identity.Register;
+using TaskLane.Application.Identity.SignIn;
 
 namespace TaskLane.Application;
 
@@ -20,6 +22,11 @@ public static class DependencyInjection
 
         services.AddSingleton<IValidator<RegisterUserCommand>, RegisterUserValidator>();
         services.AddScoped<RegisterUserHandler>();
+
+        services.AddSingleton<IValidator<SignInCommand>, SignInValidator>();
+        services.AddScoped<SignInHandler>();
+
+        services.AddScoped<GetProfileHandler>();
 
         return services;
     }

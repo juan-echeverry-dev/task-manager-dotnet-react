@@ -12,4 +12,9 @@ public interface IUserRepository
     /// normalized email, including when that account was saved concurrently.
     /// </summary>
     Task<bool> TryAddAsync(User user, CancellationToken cancellationToken);
+
+    /// <summary>Finds the account for an email already normalized with <see cref="User.NormalizeEmail"/>.</summary>
+    Task<User?> GetByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken);
+
+    Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 }
