@@ -69,12 +69,12 @@ on its own.
   - Properties `Id` (Guid), `Email`, `NormalizedEmail`, `DisplayName`, `PasswordHash`, `CreatedAt` (DateTimeOffset), all with private setters.
   - A private parameterless constructor for EF Core.
   - Public constants `EmailMaxLength = 254` and `DisplayNameMaxLength = 100`.
-- [ ] T009 [P] Write a failing Infrastructure test that applies migrations and checks the `Users` table:
+- [X] T009 [P] Write a failing Infrastructure test that applies migrations and checks the `Users` table:
   - Saving two users whose `NormalizedEmail` is equal throws `DbUpdateException`.
   - A saved user round-trips all six fields unchanged.
 
   Use an in-memory SQLite connection like `DatabaseInitializerTests`. File: `tests/TaskLane.Infrastructure.Tests/Identity/UserPersistenceTests.cs`
-- [ ] T010 Create `UserConfiguration` in `src/TaskLane.Infrastructure/Persistence/Configurations/UserConfiguration.cs`, then add the migration with `dotnet ef migrations add AddUsers --project src/TaskLane.Infrastructure --startup-project src/TaskLane.Api --output-dir Persistence/Migrations`. T009 must then pass. Configuration:
+- [X] T010 Create `UserConfiguration` in `src/TaskLane.Infrastructure/Persistence/Configurations/UserConfiguration.cs`, then add the migration with `dotnet ef migrations add AddUsers --project src/TaskLane.Infrastructure --startup-project src/TaskLane.Api --output-dir Persistence/Migrations`. T009 must then pass. Configuration:
   - Table `Users`, key `Id`.
   - `Email` "NOT NULL, max 254".
   - `NormalizedEmail` "NOT NULL, max 254, unique index `IX_Users_NormalizedEmail`".

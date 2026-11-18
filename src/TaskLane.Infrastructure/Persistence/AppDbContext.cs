@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
+using TaskLane.Domain.Identity;
+
 namespace TaskLane.Infrastructure.Persistence;
 
 /// <summary>
@@ -8,6 +10,8 @@ namespace TaskLane.Infrastructure.Persistence;
 /// </summary>
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
+    public DbSet<User> Users => Set<User>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
