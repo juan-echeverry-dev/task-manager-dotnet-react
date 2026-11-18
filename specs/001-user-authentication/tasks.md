@@ -59,13 +59,13 @@ on its own.
 
   File: `tests/TaskLane.UnitTests/Common/ResultTests.cs`
 - [X] T006 Implement `Result`, `Result<T>`, `Error` and `ErrorType` in `src/TaskLane.Application/Common/Results/` (one file per type) until T005 passes. Then remove the temporary `--ignore-exit-code 8` block from `tests/TaskLane.UnitTests/TaskLane.UnitTests.csproj`.
-- [ ] T007 [P] Write failing unit tests for `User.Register(id, email, displayName, passwordHash, createdAt)` and `User.NormalizeEmail`:
+- [X] T007 [P] Write failing unit tests for `User.Register(id, email, displayName, passwordHash, createdAt)` and `User.NormalizeEmail`:
   - `Email` is trimmed; `NormalizedEmail` is the trimmed email lower-cased (invariant culture).
   - `DisplayName` is trimmed.
   - `ArgumentException` is thrown for an empty or whitespace email/displayName/passwordHash, an email over 254 chars after trim, a displayName over 100 chars after trim, and a non-UTC `createdAt` (offset ≠ 0).
 
   File: `tests/TaskLane.UnitTests/Identity/UserTests.cs`
-- [ ] T008 Implement the sealed entity `User` in `src/TaskLane.Domain/Identity/User.cs` until T007 passes:
+- [X] T008 Implement the sealed entity `User` in `src/TaskLane.Domain/Identity/User.cs` until T007 passes:
   - Properties `Id` (Guid), `Email`, `NormalizedEmail`, `DisplayName`, `PasswordHash`, `CreatedAt` (DateTimeOffset), all with private setters.
   - A private parameterless constructor for EF Core.
   - Public constants `EmailMaxLength = 254` and `DisplayNameMaxLength = 100`.
