@@ -3,6 +3,7 @@ using Scalar.AspNetCore;
 using TaskLane.Api.Identity;
 using TaskLane.Application;
 using TaskLane.Infrastructure;
+using TaskLane.Infrastructure.Identity;
 using TaskLane.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +25,7 @@ app.UseStatusCodePages();
 if (app.Environment.IsDevelopment())
 {
     await app.Services.InitializeDatabaseAsync();
+    await app.Services.SeedDemoAccountAsync();
 
     app.MapOpenApi().AllowAnonymous();
     app.MapScalarApiReference().AllowAnonymous();

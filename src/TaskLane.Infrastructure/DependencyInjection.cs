@@ -45,6 +45,9 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, PasswordHasherAdapter>();
         services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
 
+        services.AddOptions<DemoAccountOptions>().Bind(configuration.GetSection(DemoAccountOptions.SectionName));
+        services.AddScoped<DemoAccountSeeder>();
+
         return services;
     }
 }

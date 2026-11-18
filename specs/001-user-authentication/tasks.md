@@ -269,7 +269,7 @@ on its own.
 
 ### Tests for User Story 4 (write first, must fail)
 
-- [ ] T043 [P] [US4] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Identity/DemoAccountSeederTests.cs`:
+- [X] T043 [P] [US4] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Identity/DemoAccountSeederTests.cs`:
   - Seeding an empty migrated database creates one user with the configured email and display name, whose password verifies.
   - Seeding twice leaves one user with an unchanged `PasswordHash`.
   - An existing account with the demo email but another password is not modified.
@@ -278,7 +278,7 @@ on its own.
 
 ### Implementation for User Story 4
 
-- [ ] T044 [US4] Implement `DemoAccountSeeder` in `src/TaskLane.Infrastructure/Identity/DemoAccountSeeder.cs` until T043 passes:
+- [X] T044 [US4] Implement `DemoAccountSeeder` in `src/TaskLane.Infrastructure/Identity/DemoAccountSeeder.cs` until T043 passes:
   - Options `DemoAccount:Email`, `DemoAccount:Password`, `DemoAccount:DisplayName`.
   - It uses `User.Register`, `IPasswordHasher`, `TimeProvider` and `IUserRepository`.
   - Call it from `InitializeDatabaseAsync` in `src/TaskLane.Infrastructure/Persistence/DatabaseInitializer.cs`, which runs only in Development (`src/TaskLane.Api/Program.cs`).
