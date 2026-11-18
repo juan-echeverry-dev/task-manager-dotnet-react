@@ -1,20 +1,15 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createBrowserRouter, RouterProvider } from 'react-router'
+import { createBrowserRouter } from 'react-router'
+import { AppProviders } from './AppProviders'
 import { routes } from './routes'
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false },
-  },
-})
 
 const router = createBrowserRouter(routes)
 
-/** Composition root of the SPA: global providers and the router. */
+/** Composition root of the SPA. */
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <AppProviders
+      router={router}
+      queryDefaults={{ queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: false } }}
+    />
   )
 }

@@ -20,15 +20,22 @@ export class ApiError extends Error {
   }
 }
 
+export interface RequestOptions {
+  /** Access token sent as a bearer credential for protected endpoints. */
+  accessToken?: string | undefined
+}
+
 /**
  * Thin wrapper over fetch: sends/receives JSON and turns error responses into {@link ApiError}.
- * Authentication headers are added here once the authentication feature exists.
  */
-export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(path, {
-    ...init,
-    headers: { Accept: 'application/json', ...init.headers },
-  })
+export async function request<T>(path: string, init: RequestInit = {}, options: RequestOptions = {}): Promise<T> {
+  const headers = new Headers(init.headers)
+  headers.set('Accept', 'application/json')
+  if (options.accessToken) {
+    headers.set('Authorization', `Bearer ${options.accessToken}`)
+  }
+
+  const response = await fetch(path, { ...init, headers })
 
   if (!response.ok) {
     throw new ApiError(response.status, await readProblem(response))

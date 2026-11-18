@@ -19,7 +19,7 @@ can be raised later without breaking existing hashes.
 ## Alternatives considered
 
 - **Full ASP.NET Core Identity** (`UserManager`, `IdentityDbContext`): battle-tested, but imposes
-  its schema (several tables), its abstractions, and hides the registration and login logic that
+  its schema (several tables), its abstractions, and hides the registration and sign-in logic that
   this project needs to own and test.
 - **BCrypt.Net-Next / Argon2 libraries**: strong algorithms, but add a third-party dependency
   without a meaningful benefit over the framework-maintained hasher.

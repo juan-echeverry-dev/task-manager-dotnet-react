@@ -8,18 +8,27 @@
   </PropertyGroup>
 
   <ItemGroup Label="Runtime">
+    <PackageVersion Include="FluentValidation" Version="12.2.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="$(DotNetPackagesVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="$(DotNetPackagesVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="$(DotNetPackagesVersion)" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="$(DotNetPackagesVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(DotNetPackagesVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="$(DotNetPackagesVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="$(DotNetPackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Identity.Core" Version="$(DotNetPackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetPackagesVersion)" />
+    <!-- Aligned with the minimum Microsoft.IdentityModel version required by JwtBearer 10.0.x. -->
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
     <PackageVersion Include="Scalar.AspNetCore" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup Label="Testing">
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="$(DotNetPackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Diagnostics.Testing" Version="10.11.0" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.11.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.12.0" />
+    <PackageVersion Include="NSubstitute" Version="6.2.0" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="TngTech.ArchUnitNET.xUnitV3" Version="0.13.5" />
     <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.3" />

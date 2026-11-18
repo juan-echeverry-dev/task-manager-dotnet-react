@@ -43,7 +43,7 @@ src/
 │     ├─ Ports/                 interfaces the module needs from the outside
 │     └─ <UseCase>/             Command/Query, Handler, Validator, Response
 ├─ TaskLane.Infrastructure/
-│  ├─ Persistence/              AppDbContext, Configurations/, Migrations/, Seeding/
+│  ├─ Persistence/              AppDbContext, Configurations/, Migrations/
 │  └─ <Module>/                 adapters implementing the module's ports
 └─ TaskLane.Api/
    └─ <Module>/                 controller(s) and HTTP contracts for the module
@@ -71,8 +71,40 @@ sequenceDiagram
 
 | Module | Purpose | Status |
 |---|---|---|
-| Identity | Registration, login, JWT issuing, current user | Specified by `specs/001-user-authentication` |
+| Identity | Registration, sign-in, JWT issuing, current-user profile, demo account | Implemented by [`specs/001-user-authentication`](../specs/001-user-authentication/spec.md) |
 | Business module(s) | Defined by future specs | Not started |
+
+### Identity module
+
+| Layer | Contents |
+|---|---|
+| Domain | `Identity/User` — registration invariants and the single email normalization rule |
+| Application | Ports `IUserRepository`, `IPasswordHasher`, `IAccessTokenIssuer`; slices `Register`, `SignIn`, `GetProfile`; `IdentityLog` (auth events, no PII) |
+| Infrastructure | `UserRepository` (EF Core; unique-index violation → `false`), `PasswordHasherAdapter` (`PasswordHasher<T>`), `JwtAccessTokenIssuer`, `JwtOptions`, `DemoAccountSeeder` |
+| Api | `AuthController` (`POST /api/auth/register`, `POST /api/auth/sign-in`, anonymous), `UsersController` (`GET /api/users/me`), `AuthenticationSetup` |
+
+Authentication pipeline:
+
+```mermaid
+sequenceDiagram
+    participant SPA
+    participant Auth as AuthController
+    participant SignIn as SignInHandler
+    participant Users as UsersController
+    participant Bearer as JwtBearer + fallback policy
+    SPA->>Auth: POST /api/auth/sign-in {email, password}
+    Auth->>SignIn: SignInCommand
+    SignIn-->>Auth: token (sub, jti, 60 min) or uniform 401
+    Auth-->>SPA: 200 {accessToken, expiresAt}
+    SPA->>Bearer: GET /api/users/me (Authorization: Bearer)
+    Bearer-->>SPA: 401 if missing / expired / tampered / wrong issuer or audience
+    Bearer->>Users: authenticated principal (sub)
+    Users-->>SPA: profile, or 401 if the account no longer exists
+```
+
+The SPA keeps `{accessToken, expiresAt}` in `sessionStorage` (per tab). `RequireAuth` guards
+protected routes and remembers a safe `returnTo`; any 401 ends the session and shows the expiry
+message when `expiresAt` has passed.
 
 Modules interact only through public contracts (e.g. the authenticated user id claim). See
 [ADR 0003](adr/0003-identity-module-in-a-single-host.md).
@@ -94,11 +126,12 @@ Modules interact only through public contracts (e.g. the authenticated user id c
 
 ```
 frontend/src/
-├─ app/            composition root: providers, router, route table, pages
+├─ app/            composition root: AppProviders (session, query client, router), route table, pages
 ├─ features/       one folder per feature (components, hooks, API calls, tests)
 ├─ shared/         API client (ProblemDetails → ApiError), layout, UI primitives
 └─ test/           test setup and render helpers
 ```
 
-Server state is managed by TanStack Query; there is no global client store. See
+Server state is managed by TanStack Query; there is no global client store. The only client
+state shared across screens is the session (`features/auth/session`). See
 [ADR 0009](adr/0009-frontend-stack.md).

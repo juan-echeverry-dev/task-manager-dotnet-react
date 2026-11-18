@@ -31,9 +31,9 @@ describe('request', () => {
 
     await request('/api/things', { headers: { 'X-Custom': 'value' } })
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/things', {
-      headers: { Accept: 'application/json', 'X-Custom': 'value' },
-    })
+    const headers = new Headers(fetchMock.mock.calls[0]?.[1]?.headers)
+    expect(headers.get('Accept')).toBe('application/json')
+    expect(headers.get('X-Custom')).toBe('value')
   })
 
   it('throws ApiError carrying the problem details of an error response', async () => {
@@ -54,5 +54,23 @@ describe('request', () => {
       message: 'Request failed with status 503',
       problem: undefined,
     })
+  })
+
+  it('adds a bearer Authorization header when an access token is given', async () => {
+    const fetchMock = stubFetch(Response.json({}))
+
+    await request('/api/users/me', {}, { accessToken: 'token-123' })
+
+    const init = fetchMock.mock.calls[0]?.[1]
+    expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer token-123')
+  })
+
+  it('sends no Authorization header without an access token', async () => {
+    const fetchMock = stubFetch(Response.json({}))
+
+    await request('/api/things')
+
+    const init = fetchMock.mock.calls[0]?.[1]
+    expect(new Headers(init?.headers).has('Authorization')).toBe(false)
   })
 })

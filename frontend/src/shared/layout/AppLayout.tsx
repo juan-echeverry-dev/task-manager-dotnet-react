@@ -1,8 +1,13 @@
 import { Link, Outlet } from 'react-router'
+import { useSession } from '../../features/auth/session/useSession'
 import { ApiStatus } from '../../features/system-status/ApiStatus'
 
 /** Application shell: header, main content area and footer. */
 export function AppLayout() {
+  const { session } = useSession()
+  const linkClass =
+    'rounded-sm font-medium text-sky-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
+
   return (
     <div className="flex min-h-dvh flex-col bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
@@ -10,7 +15,23 @@ export function AppLayout() {
           <Link to="/" className="text-lg font-semibold tracking-tight">
             TaskLane
           </Link>
-          <ApiStatus />
+          <nav aria-label="Account" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+            {session ? (
+              <Link to="/profile" className={linkClass}>
+                Profile
+              </Link>
+            ) : (
+              <>
+                <Link to="/sign-in" className={linkClass}>
+                  Sign in
+                </Link>
+                <Link to="/register" className={linkClass}>
+                  Create account
+                </Link>
+              </>
+            )}
+            <ApiStatus />
+          </nav>
         </div>
       </header>
 

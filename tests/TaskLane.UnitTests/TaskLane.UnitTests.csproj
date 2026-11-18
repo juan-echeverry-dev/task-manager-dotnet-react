@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <!-- TEMPORARY: Domain and Application have no behavior until feature 001 adds it.
-         Exit code 8 ("zero tests ran") is tolerated only until the first unit test exists. -->
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --ignore-exit-code 8</TestingPlatformCommandLineArguments>
-  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\TaskLane.Domain\TaskLane.Domain.csproj" />
     <ProjectReference Include="..\..\src\TaskLane.Application\TaskLane.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="NSubstitute" />
   </ItemGroup>
 </Project>
