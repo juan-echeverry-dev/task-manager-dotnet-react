@@ -34,4 +34,11 @@ public sealed class PasswordHasherAdapterTests
     {
         _hasher.Verify(_hasher.Hash(Password), "wrong password").ShouldBeFalse();
     }
+
+    [Fact]
+    public void Verify_WithoutStoredHash_ReturnsFalse()
+    {
+        // Used for unknown emails: same hashing work as a wrong password, always a failure.
+        _hasher.Verify(null, Password).ShouldBeFalse();
+    }
 }

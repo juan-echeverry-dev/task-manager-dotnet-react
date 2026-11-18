@@ -61,6 +61,40 @@ public sealed class UserRepositoryTests
         (await readContext.Users.CountAsync(cancellationToken)).ShouldBe(1);
     }
 
+    [Fact]
+    public async Task GetByNormalizedEmailAsync_ReturnsMatchingUserOrNull()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var database = await SqliteDatabase.CreateAsync(cancellationToken);
+        var user = NewUser("Ana@Example.com");
+        await using (var context = database.CreateContext())
+        {
+            await new UserRepository(context).TryAddAsync(user, cancellationToken);
+        }
+
+        await using var readContext = database.CreateContext();
+        var repository = new UserRepository(readContext);
+        (await repository.GetByNormalizedEmailAsync("ana@example.com", cancellationToken))?.Id.ShouldBe(user.Id);
+        (await repository.GetByNormalizedEmailAsync("nobody@example.com", cancellationToken)).ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ReturnsMatchingUserOrNull()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var database = await SqliteDatabase.CreateAsync(cancellationToken);
+        var user = NewUser("ana@example.com");
+        await using (var context = database.CreateContext())
+        {
+            await new UserRepository(context).TryAddAsync(user, cancellationToken);
+        }
+
+        await using var readContext = database.CreateContext();
+        var repository = new UserRepository(readContext);
+        (await repository.GetByIdAsync(user.Id, cancellationToken))?.Email.ShouldBe("ana@example.com");
+        (await repository.GetByIdAsync(Guid.CreateVersion7(), cancellationToken)).ShouldBeNull();
+    }
+
     private static User NewUser(string email) =>
         User.Register(Guid.CreateVersion7(), email, "Ana", "hash", CreatedAt);
 }
