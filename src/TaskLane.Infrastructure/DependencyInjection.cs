@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using TaskLane.Application.Identity.Ports;
 using TaskLane.Infrastructure.Identity;
 using TaskLane.Infrastructure.Persistence;
 
@@ -39,6 +40,9 @@ public static class DependencyInjection
                 options => options.LifetimeMinutes is >= 1 and <= 1440,
                 "Authentication:Jwt:LifetimeMinutes must be between 1 and 1440.")
             .ValidateOnStart();
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddSingleton<IPasswordHasher, PasswordHasherAdapter>();
 
         return services;
     }

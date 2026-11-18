@@ -120,16 +120,16 @@ on its own.
 
 ### Tests for User Story 1 (write first, must fail)
 
-- [ ] T018 [P] [US1] Write failing validator tests in `tests/TaskLane.UnitTests/Identity/Register/RegisterUserValidatorTests.cs`, asserting each rule and message from data-model.md:
+- [X] T018 [P] [US1] Write failing validator tests in `tests/TaskLane.UnitTests/Identity/Register/RegisterUserValidatorTests.cs`, asserting each rule and message from data-model.md:
   - displayName "Not empty after trim; ≤ 100 chars after trim".
   - email "Not empty; valid email format; ≤ 254 chars after trim".
   - password "8–128 chars; not whitespace-only".
   - All failing fields are reported together.
-- [ ] T019 [P] [US1] Write failing handler tests in `tests/TaskLane.UnitTests/Identity/Register/RegisterUserHandlerTests.cs`, with NSubstitute fakes for `IUserRepository`/`IPasswordHasher`, `FakeTimeProvider` and `FakeLogger<RegisterUserHandler>`:
+- [X] T019 [P] [US1] Write failing handler tests in `tests/TaskLane.UnitTests/Identity/Register/RegisterUserHandlerTests.cs`, with NSubstitute fakes for `IUserRepository`/`IPasswordHasher`, `FakeTimeProvider` and `FakeLogger<RegisterUserHandler>`:
   - Valid input → `TryAddAsync` receives a `User` whose `PasswordHash` is the hasher output, `CreatedAt` equals the fake clock and `Id` is a v7 Guid. Returns `RegisterUserResponse(Id, DisplayName, Email, CreatedAt)` and logs `UserRegistered` with the user id and without the email.
   - Invalid input → `Error.Validation` and the hasher is not called.
   - `TryAddAsync` returns false → `Error.Conflict("Email already registered", "An account with this email already exists.")`.
-- [ ] T020 [P] [US1] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Identity/UserRepositoryTests.cs` and `PasswordHasherAdapterTests.cs`:
+- [X] T020 [P] [US1] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Identity/UserRepositoryTests.cs` and `PasswordHasherAdapterTests.cs`:
   - `TryAddAsync` returns true and persists a user.
   - It returns false for a duplicate normalized email, including two separate `AppDbContext` instances on the same connection inserting the same email: exactly one true.
   - The hash ≠ the password, and two hashes of the same password differ (SC-003).
@@ -143,14 +143,14 @@ on its own.
 
 ### Implementation for User Story 1
 
-- [ ] T022 [P] [US1] Create the ports in `src/TaskLane.Application/Identity/Ports/`:
+- [X] T022 [P] [US1] Create the ports in `src/TaskLane.Application/Identity/Ports/`:
   - `IUserRepository.cs`, with `Task<bool> TryAddAsync(User, CancellationToken)`.
   - `IPasswordHasher.cs`, with `string Hash(string password)` and `bool Verify(string passwordHash, string password)`.
-- [ ] T023 [US1] Implement the register slice in `src/TaskLane.Application/Identity/Register/` until T018 and T019 pass:
+- [X] T023 [US1] Implement the register slice in `src/TaskLane.Application/Identity/Register/` until T018 and T019 pass:
   - Files: `RegisterUserCommand.cs`, `RegisterUserValidator.cs`, `RegisterUserResponse.cs`, `RegisterUserHandler.cs`.
   - Logging: `IdentityLog.UserRegistered` in `src/TaskLane.Application/Identity/IdentityLog.cs`, using `[LoggerMessage]`.
   - Register the handler and validators in `src/TaskLane.Application/DependencyInjection.cs`.
-- [ ] T024 [P] [US1] Implement `UserRepository.TryAddAsync`, which catches `DbUpdateException` with an inner `SqliteException` of extended code 2067 and returns false, in `src/TaskLane.Infrastructure/Identity/UserRepository.cs`. Implement `PasswordHasherAdapter` (wrapping `PasswordHasher<User>`, where `SuccessRehashNeeded` counts as success) in `src/TaskLane.Infrastructure/Identity/PasswordHasherAdapter.cs`. Register both as scoped/singleton in `src/TaskLane.Infrastructure/DependencyInjection.cs`. T020 must then pass.
+- [X] T024 [P] [US1] Implement `UserRepository.TryAddAsync`, which catches `DbUpdateException` with an inner `SqliteException` of extended code 2067 and returns false, in `src/TaskLane.Infrastructure/Identity/UserRepository.cs`. Implement `PasswordHasherAdapter` (wrapping `PasswordHasher<User>`, where `SuccessRehashNeeded` counts as success) in `src/TaskLane.Infrastructure/Identity/PasswordHasherAdapter.cs`. Register both as scoped/singleton in `src/TaskLane.Infrastructure/DependencyInjection.cs`. T020 must then pass.
 - [ ] T025 [US1] Implement `POST /api/auth/register` in `src/TaskLane.Api/Identity/AuthController.cs` with `[AllowAnonymous]`, `[ApiController]` and `[Route("api/auth")]`, until T021 passes. It returns `CreatedResult` to `/api/users/me` with the profile body and uses `ResultMappings`. Add `ProducesResponseType` attributes for OpenAPI.
 - [ ] T026 [P] [US1] Write failing Vitest tests:
   - In `frontend/src/features/auth/auth-api.test.ts`, `register()` posts JSON to `/api/auth/register` and surfaces 400/409 as `ApiError`.
