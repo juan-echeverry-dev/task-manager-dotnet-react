@@ -31,9 +31,9 @@ describe('request', () => {
 
     await request('/api/things', { headers: { 'X-Custom': 'value' } })
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/things', {
-      headers: { Accept: 'application/json', 'X-Custom': 'value' },
-    })
+    const headers = new Headers(fetchMock.mock.calls[0]?.[1]?.headers)
+    expect(headers.get('Accept')).toBe('application/json')
+    expect(headers.get('X-Custom')).toBe('value')
   })
 
   it('throws ApiError carrying the problem details of an error response', async () => {

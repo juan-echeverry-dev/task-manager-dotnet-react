@@ -14,10 +14,29 @@ export interface RegisterInput {
   password: string
 }
 
+export interface SignInInput {
+  email: string
+  password: string
+}
+
+export interface SignInResult {
+  accessToken: string
+  tokenType: 'Bearer'
+  expiresAt: string
+}
+
 export function register(input: RegisterInput): Promise<UserProfile> {
-  return request<UserProfile>('/api/auth/register', {
+  return postJson<UserProfile>('/api/auth/register', input)
+}
+
+export function signIn(input: SignInInput): Promise<SignInResult> {
+  return postJson<SignInResult>('/api/auth/sign-in', input)
+}
+
+function postJson<T>(path: string, body: unknown): Promise<T> {
+  return request<T>(path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
+    body: JSON.stringify(body),
   })
 }

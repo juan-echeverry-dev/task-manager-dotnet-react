@@ -208,14 +208,14 @@ on its own.
 - [X] T036 [US2] Implement the profile slice in `src/TaskLane.Application/Identity/GetProfile/` (`GetProfileQuery.cs`, `ProfileResponse.cs`, `GetProfileHandler.cs`) until T029 passes. Register it in DI.
 - [X] T037 [P] [US2] Implement `JwtAccessTokenIssuer`, using `JsonWebTokenHandler`, HS256, `TimeProvider` and `JwtOptions`, in `src/TaskLane.Infrastructure/Identity/JwtAccessTokenIssuer.cs`. Register it in `src/TaskLane.Infrastructure/DependencyInjection.cs`. T030 must then pass.
 - [X] T038 [US2] Add `POST /api/auth/sign-in` to `src/TaskLane.Api/Identity/AuthController.cs` (anonymous). Create `src/TaskLane.Api/Identity/UsersController.cs` with `GET /api/users/me`, which reads the `sub` claim and maps an absent or unparsable claim to 401. T031, T032 and T033 must then pass.
-- [ ] T039 [P] [US2] Write failing Vitest tests:
+- [X] T039 [P] [US2] Write failing Vitest tests:
   - `frontend/src/shared/api/http-client.test.ts`: `request` adds `Authorization: Bearer` when a token is given.
   - `frontend/src/features/auth/return-path.test.ts`: `/profile` ✅; `https://evil.example`, `//evil.example`, `/\evil.example` and `/does-not-exist` → `/profile`; the query string is preserved.
   - `frontend/src/features/auth/session/SessionProvider.test.tsx`: `signIn` stores `{accessToken, expiresAt}` under `tasklane.session`; invalid JSON is discarded.
   - `frontend/src/features/auth/SignInPage.test.tsx`: labelled fields; disabled "Signing in…" while pending; 401 → "Invalid email or password." with the password cleared; a network error → "We couldn't reach the service. Please try again." with the email kept and the password cleared; keyboard-only submit with Enter; success → safe `returnTo` or `/profile`.
   - `frontend/src/features/auth/RequireAuth.test.tsx`: anonymous → `/sign-in?returnTo=%2Fprofile`.
   - `frontend/src/features/profile/ProfilePage.test.tsx`: shows display name, email and member-since date in local format.
-- [ ] T040 [US2] Implement the SPA until T039 passes:
+- [X] T040 [US2] Implement the SPA until T039 passes:
   - Add an optional token to `frontend/src/shared/api/http-client.ts`.
   - Session context: `frontend/src/features/auth/session/session-storage.ts`, `SessionProvider.tsx` and `useSession.ts`.
   - Return-path guard: `frontend/src/features/auth/return-path.ts`, using `matchRoutes` against `routes`.

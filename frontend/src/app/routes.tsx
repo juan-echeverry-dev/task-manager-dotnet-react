@@ -1,6 +1,8 @@
 import type { RouteObject } from 'react-router'
 import { RegisterPage } from '../features/auth/RegisterPage'
+import { RequireAuth } from '../features/auth/RequireAuth'
 import { SignInPage } from '../features/auth/SignInPage'
+import { ProfilePage } from '../features/profile/ProfilePage'
 import { AppLayout } from '../shared/layout/AppLayout'
 import { HomePage } from './routes/HomePage'
 import { NotFoundPage } from './routes/NotFoundPage'
@@ -13,6 +15,10 @@ export const routes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: 'register', element: <RegisterPage /> },
       { path: 'sign-in', element: <SignInPage /> },
+      {
+        element: <RequireAuth />,
+        children: [{ path: 'profile', element: <ProfilePage /> }],
+      },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

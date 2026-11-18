@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter, RouterProvider } from 'react-router'
+import { SessionProvider } from '../features/auth/session/SessionProvider'
 import { routes } from './routes'
 
 const queryClient = new QueryClient({
@@ -13,8 +14,10 @@ const router = createBrowserRouter(routes)
 /** Composition root of the SPA: global providers and the router. */
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>
+    <SessionProvider>
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </SessionProvider>
   )
 }
