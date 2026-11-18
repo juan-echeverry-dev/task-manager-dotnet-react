@@ -1,4 +1,5 @@
 import type { RouteObject } from 'react-router'
+import { RedirectIfAuthenticated } from '../features/auth/RedirectIfAuthenticated'
 import { RegisterPage } from '../features/auth/RegisterPage'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { SignInPage } from '../features/auth/SignInPage'
@@ -13,8 +14,13 @@ export const routes: RouteObject[] = [
     element: <AppLayout />,
     children: [
       { index: true, element: <HomePage /> },
-      { path: 'register', element: <RegisterPage /> },
-      { path: 'sign-in', element: <SignInPage /> },
+      {
+        element: <RedirectIfAuthenticated />,
+        children: [
+          { path: 'register', element: <RegisterPage /> },
+          { path: 'sign-in', element: <SignInPage /> },
+        ],
+      },
       {
         element: <RequireAuth />,
         children: [{ path: 'profile', element: <ProfilePage /> }],

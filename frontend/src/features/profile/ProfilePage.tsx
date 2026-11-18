@@ -6,7 +6,7 @@ const memberSinceFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'long'
 
 /** Profile of the signed-in person (spec FR-011). Rendered only inside RequireAuth. */
 export function ProfilePage() {
-  const { session } = useSession()
+  const { session, signOut } = useSession()
   const accessToken = session?.accessToken ?? ''
   const profile = useQuery({
     queryKey: ['profile', accessToken],
@@ -16,7 +16,16 @@ export function ProfilePage() {
 
   return (
     <section className="mx-auto w-full max-w-md space-y-6">
-      <h1 className="text-2xl font-semibold">Your profile</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">Your profile</h1>
+        <button
+          type="button"
+          onClick={signOut}
+          className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+        >
+          Sign out
+        </button>
+      </div>
 
       {profile.isPending ? <p className="text-slate-600">Loading your profile…</p> : null}
 

@@ -237,7 +237,7 @@ on its own.
 
 ### Tests for User Story 3 (write first, must fail)
 
-- [ ] T041 [P] [US3] Write failing Vitest tests:
+- [X] T041 [P] [US3] Write failing Vitest tests:
   - `frontend/src/features/auth/session/SessionProvider.test.tsx`:
     - A session is restored from `sessionStorage` on mount (reload).
     - `signOut` clears storage and the query cache.
@@ -250,7 +250,7 @@ on its own.
 
 ### Implementation for User Story 3
 
-- [ ] T042 [US3] Implement the session lifecycle until T041 passes:
+- [X] T042 [US3] Implement the session lifecycle until T041 passes:
   - 401 handling as placed in T040: `onError` callbacks in `frontend/src/app/App.tsx` notify `frontend/src/features/auth/session/SessionProvider.tsx`, and the redirect is performed in `frontend/src/shared/layout/AppLayout.tsx`.
   - Expiry check in `frontend/src/features/auth/RequireAuth.tsx`.
   - `frontend/src/features/auth/RedirectIfAuthenticated.tsx` wrapping `/sign-in` and `/register` in `frontend/src/app/routes.tsx`.

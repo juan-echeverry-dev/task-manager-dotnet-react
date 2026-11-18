@@ -4,4 +4,5 @@ export const authMessages = {
   emailAlreadyRegistered: 'This email is already registered.',
   accountCreated: 'Account created. You can now sign in.',
   invalidCredentials: 'Invalid email or password.',
+  sessionExpired: 'Your session has expired. Please sign in again.',
 } as const

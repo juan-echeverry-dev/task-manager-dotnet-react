@@ -1,30 +1,28 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { ApiError } from '../../shared/api/http-client'
 import { SubmitButton } from '../../shared/ui/SubmitButton'
 import { TextField } from '../../shared/ui/TextField'
 import { signIn as requestSignIn } from './auth-api'
 import { authMessages } from './messages'
-import { safeReturnPath } from './return-path'
 import { signInSchema, type SignInValues } from './schemas'
 import { useSession } from './session/useSession'
 
 /** Navigation state accepted by the sign-in screen. */
 export interface SignInLocationState {
-  email?: string
-  registered?: boolean
+  email?: string | undefined
+  registered?: boolean | undefined
+  reason?: 'expired' | undefined
 }
 
 const FIELDS = ['email', 'password'] as const
 
 export function SignInPage() {
   const state = (useLocation().state ?? {}) as SignInLocationState
-  const [searchParams] = useSearchParams()
-  const navigate = useNavigate()
-  const { signIn } = useSession()
+  const { signIn, acknowledgeEnd } = useSession()
   const [formError, setFormError] = useState<string>()
   const {
     register,
@@ -38,12 +36,15 @@ export function SignInPage() {
   })
   const mutation = useMutation({ mutationFn: requestSignIn })
 
+  // The reason a previous session ended is shown once, from the navigation state.
+  useEffect(() => acknowledgeEnd(), [acknowledgeEnd])
+
   const onSubmit = handleSubmit(async (values) => {
     setFormError(undefined)
     try {
       const result = await mutation.mutateAsync(values)
+      // RedirectIfAuthenticated then sends the person to the safe return destination.
       signIn({ accessToken: result.accessToken, expiresAt: result.expiresAt })
-      await navigate(safeReturnPath(searchParams.get('returnTo')), { replace: true })
     } catch (error) {
       setValue('password', '')
       if (error instanceof ApiError && error.status === 401) {
@@ -66,6 +67,12 @@ export function SignInPage() {
       {state.registered && !formError ? (
         <p role="status" className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
           {authMessages.accountCreated}
+        </p>
+      ) : null}
+
+      {state.reason === 'expired' && !formError ? (
+        <p role="alert" className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          {authMessages.sessionExpired}
         </p>
       ) : null}
 
