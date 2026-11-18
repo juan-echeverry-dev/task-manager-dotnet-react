@@ -81,7 +81,7 @@ on its own.
   - `DisplayName` "NOT NULL, max 100".
   - `PasswordHash` NOT NULL.
   - `CreatedAt` NOT NULL.
-- [ ] T011 Rework the API test host so it has a real schema (research R11), keeping the existing `PlatformEndpointsTests` green:
+- [X] T011 Rework the API test host so it has a real schema (research R11), keeping the existing `PlatformEndpointsTests` green:
   - `tests/TaskLane.Api.Tests/ApiFactory.cs` keeps one open in-memory `SqliteConnection` per factory and replaces the `DbContextOptions<AppDbContext>` registration to use it.
   - It applies migrations on host start and disposes the connection with the factory.
   - It sets `Authentication:Jwt:*` test settings: issuer `tasklane-tests`, audience `tasklane-tests`, and a random 32-byte base64 signing key per factory.
