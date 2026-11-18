@@ -177,37 +177,37 @@ on its own.
 
 ### Tests for User Story 2 (write first, must fail)
 
-- [ ] T028 [P] [US2] Write failing unit tests in `tests/TaskLane.UnitTests/Identity/SignIn/SignInValidatorTests.cs` (email and password "Not empty") and `SignInHandlerTests.cs`:
+- [X] T028 [P] [US2] Write failing unit tests in `tests/TaskLane.UnitTests/Identity/SignIn/SignInValidatorTests.cs` (email and password "Not empty") and `SignInHandlerTests.cs`:
   - Correct credentials → `SignInResponse(AccessToken, "Bearer", ExpiresAt)` from the `IAccessTokenIssuer` fake, logging `SignInSucceeded(userId)`.
   - Wrong password and unknown email → the same `Error.Unauthorized("Invalid credentials", "Invalid email or password.")`, logging `SignInFailed` with no email.
   - Unknown email still calls `IPasswordHasher.Verify` once, against the dummy hash (research R4).
   - Lookup uses `User.NormalizeEmail`.
-- [ ] T029 [P] [US2] Write failing unit tests in `tests/TaskLane.UnitTests/Identity/GetProfile/GetProfileHandlerTests.cs`:
+- [X] T029 [P] [US2] Write failing unit tests in `tests/TaskLane.UnitTests/Identity/GetProfile/GetProfileHandlerTests.cs`:
   - An existing id → `ProfileResponse(Id, DisplayName, Email, CreatedAt)`.
   - A missing id → `Error.Unauthorized` (Clarification Q3).
-- [ ] T030 [P] [US2] Write failing Infrastructure tests:
+- [X] T030 [P] [US2] Write failing Infrastructure tests:
   - `tests/TaskLane.Infrastructure.Tests/Identity/UserRepositoryTests.cs`: `GetByNormalizedEmailAsync` and `GetByIdAsync` return the user or null.
   - `tests/TaskLane.Infrastructure.Tests/Identity/JwtAccessTokenIssuerTests.cs`: the token validates with the configured key, issuer and audience; claims are exactly `sub` = user id plus `jti`, `iat`, `nbf`, `exp`, `iss`, `aud`, with no email; `exp` and `ExpiresAt` = `FakeTimeProvider` now + 60 min; the algorithm is HS256.
-- [ ] T031 [P] [US2] Write failing API tests in `tests/TaskLane.Api.Tests/Identity/SignInEndpointTests.cs`:
+- [X] T031 [P] [US2] Write failing API tests in `tests/TaskLane.Api.Tests/Identity/SignInEndpointTests.cs`:
   - 200 with `accessToken`, `tokenType`, `expiresAt`.
   - 400 for empty fields.
   - The wrong-password and unknown-email 401 responses have byte-identical bodies (ignoring `traceId`) and equal status and headers (SC-004).
-- [ ] T032 [P] [US2] Write failing API tests in `tests/TaskLane.Api.Tests/Identity/ProfileEndpointTests.cs`:
+- [X] T032 [P] [US2] Write failing API tests in `tests/TaskLane.Api.Tests/Identity/ProfileEndpointTests.cs`:
   - 200 profile with a valid token, with no `passwordHash`/`password` fields.
   - 401 Problem Details for each of: missing header; expired token (advance `FakeTimeProvider` by 60 min); malformed string; tampered payload; token signed with another key; wrong issuer; wrong audience; a token for a deleted user (SC-002).
-- [ ] T033 [P] [US2] Write a failing API test in `tests/TaskLane.Api.Tests/Identity/AuthLoggingTests.cs`. It runs register, sign-in success, sign-in failure and profile. It asserts that `FakeLogCollector` has the `UserRegistered`, `SignInSucceeded` and `SignInFailed` events, and that no record's message or state contains the test password, email (any case) or issued token (SC-007).
+- [X] T033 [P] [US2] Write a failing API test in `tests/TaskLane.Api.Tests/Identity/AuthLoggingTests.cs`. It runs register, sign-in success, sign-in failure and profile. It asserts that `FakeLogCollector` has the `UserRegistered`, `SignInSucceeded` and `SignInFailed` events, and that no record's message or state contains the test password, email (any case) or issued token (SC-007).
 
 ### Implementation for User Story 2
 
-- [ ] T034 [P] [US2] Add `GetByNormalizedEmailAsync(string, CancellationToken)` and `GetByIdAsync(Guid, CancellationToken)` to `src/TaskLane.Application/Identity/Ports/IUserRepository.cs` and implement them with `AsNoTracking` in `src/TaskLane.Infrastructure/Identity/UserRepository.cs`. Create `src/TaskLane.Application/Identity/Ports/IAccessTokenIssuer.cs`, which returns `AccessToken(string Value, DateTimeOffset ExpiresAt)`.
-- [ ] T035 [US2] Implement the sign-in slice in `src/TaskLane.Application/Identity/SignIn/` until T028 passes:
+- [X] T034 [P] [US2] Add `GetByNormalizedEmailAsync(string, CancellationToken)` and `GetByIdAsync(Guid, CancellationToken)` to `src/TaskLane.Application/Identity/Ports/IUserRepository.cs` and implement them with `AsNoTracking` in `src/TaskLane.Infrastructure/Identity/UserRepository.cs`. Create `src/TaskLane.Application/Identity/Ports/IAccessTokenIssuer.cs`, which returns `AccessToken(string Value, DateTimeOffset ExpiresAt)`.
+- [X] T035 [US2] Implement the sign-in slice in `src/TaskLane.Application/Identity/SignIn/` until T028 passes:
   - Files: `SignInCommand.cs`, `SignInValidator.cs`, `SignInResponse.cs`, `SignInHandler.cs`.
   - The handler keeps a static dummy hash generated once with `IPasswordHasher` for timing equalization.
   - Add `SignInSucceeded`/`SignInFailed` to `src/TaskLane.Application/Identity/IdentityLog.cs`.
   - Register the handler in DI.
-- [ ] T036 [US2] Implement the profile slice in `src/TaskLane.Application/Identity/GetProfile/` (`GetProfileQuery.cs`, `ProfileResponse.cs`, `GetProfileHandler.cs`) until T029 passes. Register it in DI.
-- [ ] T037 [P] [US2] Implement `JwtAccessTokenIssuer`, using `JsonWebTokenHandler`, HS256, `TimeProvider` and `JwtOptions`, in `src/TaskLane.Infrastructure/Identity/JwtAccessTokenIssuer.cs`. Register it in `src/TaskLane.Infrastructure/DependencyInjection.cs`. T030 must then pass.
-- [ ] T038 [US2] Add `POST /api/auth/sign-in` to `src/TaskLane.Api/Identity/AuthController.cs` (anonymous). Create `src/TaskLane.Api/Identity/UsersController.cs` with `GET /api/users/me`, which reads the `sub` claim and maps an absent or unparsable claim to 401. T031, T032 and T033 must then pass.
+- [X] T036 [US2] Implement the profile slice in `src/TaskLane.Application/Identity/GetProfile/` (`GetProfileQuery.cs`, `ProfileResponse.cs`, `GetProfileHandler.cs`) until T029 passes. Register it in DI.
+- [X] T037 [P] [US2] Implement `JwtAccessTokenIssuer`, using `JsonWebTokenHandler`, HS256, `TimeProvider` and `JwtOptions`, in `src/TaskLane.Infrastructure/Identity/JwtAccessTokenIssuer.cs`. Register it in `src/TaskLane.Infrastructure/DependencyInjection.cs`. T030 must then pass.
+- [X] T038 [US2] Add `POST /api/auth/sign-in` to `src/TaskLane.Api/Identity/AuthController.cs` (anonymous). Create `src/TaskLane.Api/Identity/UsersController.cs` with `GET /api/users/me`, which reads the `sub` claim and maps an absent or unparsable claim to 401. T031, T032 and T033 must then pass.
 - [ ] T039 [P] [US2] Write failing Vitest tests:
   - `frontend/src/shared/api/http-client.test.ts`: `request` adds `Authorization: Bearer` when a token is given.
   - `frontend/src/features/auth/return-path.test.ts`: `/profile` ✅; `https://evil.example`, `//evil.example`, `/\evil.example` and `/does-not-exist` → `/profile`; the query string is preserved.

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using TaskLane.Api.Common;
 using TaskLane.Application.Identity.Register;
+using TaskLane.Application.Identity.SignIn;
 
 namespace TaskLane.Api.Identity;
 
@@ -35,5 +36,24 @@ public sealed class AuthController : ControllerBase
         return result.ToActionResult(user => Created(
             ProfileLocation,
             new UserProfileResponse(user.Id, user.DisplayName, user.Email, user.CreatedAt)));
+    }
+
+    [HttpPost("sign-in")]
+    [ProducesResponseType<SignInResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, "application/problem+json")]
+    public async Task<IActionResult> SignIn(
+        SignInRequest request,
+        [FromServices] SignInHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(handler);
+
+        var result = await handler.HandleAsync(
+            new SignInCommand(request.Email ?? string.Empty, request.Password ?? string.Empty),
+            cancellationToken);
+
+        return result.ToActionResult(Ok);
     }
 }
