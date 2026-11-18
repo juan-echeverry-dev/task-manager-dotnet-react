@@ -30,10 +30,10 @@ on its own.
 
 **Purpose**: Dependencies and configuration needed before any test can be written.
 
-- [ ] T001 Add package versions to `Directory.Packages.props`:
+- [X] T001 Add package versions to `Directory.Packages.props`:
   - **Runtime:** FluentValidation 12.2.0; Microsoft.Extensions.Logging.Abstractions, Microsoft.Extensions.Identity.Core and Microsoft.AspNetCore.Authentication.JwtBearer at `$(DotNetPackagesVersion)`; Microsoft.IdentityModel.JsonWebTokens at the version JwtBearer 10.0.15 depends on.
   - **Testing:** NSubstitute 6.2.0; Microsoft.Extensions.TimeProvider.Testing 10.11.0; Microsoft.Extensions.Diagnostics.Testing 10.11.0.
-- [ ] T002 Reference the packages from their projects:
+- [X] T002 Reference the packages from their projects:
   - FluentValidation and Logging.Abstractions in `src/TaskLane.Application/TaskLane.Application.csproj`.
   - Identity.Core and JsonWebTokens in `src/TaskLane.Infrastructure/TaskLane.Infrastructure.csproj`.
   - JwtBearer in `src/TaskLane.Api/TaskLane.Api.csproj`.
@@ -41,8 +41,8 @@ on its own.
   - TimeProvider.Testing in `tests/TaskLane.Infrastructure.Tests/TaskLane.Infrastructure.Tests.csproj`.
   - TimeProvider.Testing and Diagnostics.Testing in `tests/TaskLane.Api.Tests/TaskLane.Api.Tests.csproj`.
   - Then run `dotnet build TaskLane.slnx` (0 warnings) and `dotnet test --solution TaskLane.slnx` (green).
-- [ ] T003 [P] Install the SPA form libraries with `npm install react-hook-form zod @hookform/resolvers` in `frontend/package.json`, then run `npm run check` (green).
-- [ ] T004 [P] Register `TimeProvider.System` as a singleton in `src/TaskLane.Application/DependencyInjection.cs`. This is configuration only and is exempt from test-first.
+- [X] T003 [P] Install the SPA form libraries with `npm install react-hook-form zod @hookform/resolvers` in `frontend/package.json`, then run `npm run check` (green).
+- [X] T004 [P] Register `TimeProvider.System` as a singleton in `src/TaskLane.Application/DependencyInjection.cs`. This is configuration only and is exempt from test-first.
 
 ---
 

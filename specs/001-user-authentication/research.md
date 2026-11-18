@@ -124,7 +124,7 @@ questions, one decision each.
 | Microsoft.Extensions.Diagnostics.Testing | 10.11.0 | UnitTests, Api.Tests | `FakeLogger`, `FakeLogCollector` | MIT |
 | react-hook-form | 7.x | frontend | Forms (ADR 0009) | MIT |
 | zod | 4.x | frontend | Client-side validation schemas (ADR 0009) | MIT |
-| @hookform/resolvers | 5.x | frontend | Zod ↔ React Hook Form bridge | MIT |
+| @hookform/resolvers | 7.x | frontend | Zod ↔ React Hook Form bridge | MIT |
 
 Pinning: Microsoft runtime packages stay on the 10.0.x servicing band (11.0 targets .NET 11). The
 `Microsoft.Extensions.*.Testing` packages use their own 10.x line. Versions were checked against
