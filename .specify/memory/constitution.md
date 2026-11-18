@@ -112,8 +112,8 @@ are the costliest to fix.
 - SOLID applied pragmatically; small, cohesive units with intention-revealing names.
 - Backend: nullable reference types enabled, warnings treated as errors, .NET analyzers on,
   formatting enforced via `.editorconfig` and `dotnet format`.
-- Frontend: TypeScript strict mode, ESLint with zero warnings, no warnings or errors in the
-  browser console during normal use.
+- Frontend: TypeScript strict mode, the project linter (oxlint, ADR 0009) with zero warnings,
+  and no warnings or errors in the browser console during normal use.
 - Code, identifiers, comments, commit messages, and documentation are written in English.
 - Significant architectural decisions are recorded as ADRs in `docs/adr/`.
 
@@ -157,4 +157,4 @@ constitution wins until amended.
 - Reviews of every spec, plan, and pull request MUST verify compliance with these principles.
 - Runtime guidance for AI agents lives in `CLAUDE.md` and MUST stay consistent with this file.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-17 | **Last Amended**: 2026-11-17
+**Version**: 1.0.1 | **Ratified**: 2026-11-17 | **Last Amended**: 2026-11-17
