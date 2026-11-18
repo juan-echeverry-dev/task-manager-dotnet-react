@@ -73,7 +73,7 @@ public sealed class RegisterUserHandlerTests
         result.Error!.Type.ShouldBe(ErrorType.Validation);
         result.Error.ValidationErrors.Keys.ShouldBe(["DisplayName", "Email", "Password"], ignoreOrder: true);
         _hasher.DidNotReceiveWithAnyArgs().Hash(default!);
-        await _users.DidNotReceiveWithAnyArgs().TryAddAsync(default!, default);
+        await _users.DidNotReceiveWithAnyArgs().TryAddAsync(default!, TestContext.Current.CancellationToken);
     }
 
     [Fact]
