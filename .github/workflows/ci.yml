@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  backend:
+    name: Backend (build, format, tests, coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore TaskLane.slnx
+
+      - name: Build (warnings as errors)
+        run: dotnet build TaskLane.slnx --no-restore --configuration Release
+
+      - name: Verify formatting
+        run: dotnet format TaskLane.slnx --no-restore --verify-no-changes
+
+      - name: Tests with coverage gate
+        shell: pwsh
+        run: ./scripts/test-coverage.ps1 -Configuration Release
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          summary=artifacts/coverage/report/SummaryGithub.md
+          if [ -f "$summary" ]; then cat "$summary" >> "$GITHUB_STEP_SUMMARY"; fi
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: artifacts/coverage/report
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend (typecheck, lint, tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck, lint, test and build
+        run: npm run check
