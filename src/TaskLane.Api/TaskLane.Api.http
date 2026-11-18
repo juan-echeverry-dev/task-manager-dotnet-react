@@ -1,0 +1,3 @@
+@TaskLane.Api_HostAddress = http://localhost:5208
+
+GET {{TaskLane.Api_HostAddress}}/health

@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TaskLane.Api/TaskLane.Api.csproj" />
+    <Project Path="src/TaskLane.Application/TaskLane.Application.csproj" />
+    <Project Path="src/TaskLane.Domain/TaskLane.Domain.csproj" />
+    <Project Path="src/TaskLane.Infrastructure/TaskLane.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TaskLane.Api.Tests/TaskLane.Api.Tests.csproj" />
+    <Project Path="tests/TaskLane.ArchitectureTests/TaskLane.ArchitectureTests.csproj" />
+    <Project Path="tests/TaskLane.Infrastructure.Tests/TaskLane.Infrastructure.Tests.csproj" />
+    <Project Path="tests/TaskLane.UnitTests/TaskLane.UnitTests.csproj" />
+  </Folder>
+</Solution>
