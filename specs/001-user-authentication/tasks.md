@@ -291,9 +291,9 @@ on its own.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T046 [P] Amend `docs/adr/0006-jwt-bearer-authentication.md`: change the claims to `sub` and `jti`; there is no sign-out endpoint and sign-out is client-side only (accepted risk, spec Clarification Q1); clock skew is 0; failed sign-in timing is equalized. Replace "login" with "sign in" in `docs/adr/0006-jwt-bearer-authentication.md` and `docs/adr/0010-http-api-conventions.md` where it refers to the user action.
-- [ ] T047 [P] Update `docs/architecture.md` with the Identity module slices, the request flow (controller → handler → ports) and the auth pipeline. Update the "Where things go" examples in `CLAUDE.md` only if they changed.
-- [ ] T048 [P] Add sample requests for register, sign-in and me (with a `@token` variable) to `src/TaskLane.Api/TaskLane.Api.http`.
+- [X] T046 [P] Amend `docs/adr/0006-jwt-bearer-authentication.md`: change the claims to `sub` and `jti`; there is no sign-out endpoint and sign-out is client-side only (accepted risk, spec Clarification Q1); clock skew is 0; failed sign-in timing is equalized. Replace "login" with "sign in" in `docs/adr/0006-jwt-bearer-authentication.md` and `docs/adr/0010-http-api-conventions.md` where it refers to the user action.
+- [X] T047 [P] Update `docs/architecture.md` with the Identity module slices, the request flow (controller → handler → ports) and the auth pipeline. Update the "Where things go" examples in `CLAUDE.md` only if they changed.
+- [X] T048 [P] Add sample requests for register, sign-in and me (with a `@token` variable) to `src/TaskLane.Api/TaskLane.Api.http`.
 - [ ] T049 Run the automated gates from `specs/001-user-authentication/quickstart.md` §1:
   - `dotnet build` (0 warnings).
   - `dotnet format --verify-no-changes`.
