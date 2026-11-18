@@ -138,7 +138,7 @@ describe('RegisterPage', () => {
     await user.click(submitButton())
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/sign-in'))
-    expect(await screen.findByRole('status')).toHaveTextContent('Account created. You can now sign in.')
+    expect(await screen.findByText('Account created. You can now sign in.')).toHaveAttribute('role', 'status')
     expect(screen.getByLabelText('Email')).toHaveValue('ana@example.com')
   })
 })

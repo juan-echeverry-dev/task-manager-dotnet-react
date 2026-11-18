@@ -152,7 +152,7 @@ on its own.
   - Register the handler and validators in `src/TaskLane.Application/DependencyInjection.cs`.
 - [X] T024 [P] [US1] Implement `UserRepository.TryAddAsync`, which catches `DbUpdateException` with an inner `SqliteException` of extended code 2067 and returns false, in `src/TaskLane.Infrastructure/Identity/UserRepository.cs`. Implement `PasswordHasherAdapter` (wrapping `PasswordHasher<User>`, where `SuccessRehashNeeded` counts as success) in `src/TaskLane.Infrastructure/Identity/PasswordHasherAdapter.cs`. Register both as scoped/singleton in `src/TaskLane.Infrastructure/DependencyInjection.cs`. T020 must then pass.
 - [X] T025 [US1] Implement `POST /api/auth/register` in `src/TaskLane.Api/Identity/AuthController.cs` with `[AllowAnonymous]`, `[ApiController]` and `[Route("api/auth")]`, until T021 passes. It returns `CreatedResult` to `/api/users/me` with the profile body and uses `ResultMappings`. Add `ProducesResponseType` attributes for OpenAPI.
-- [ ] T026 [P] [US1] Write failing Vitest tests:
+- [X] T026 [P] [US1] Write failing Vitest tests:
   - In `frontend/src/features/auth/auth-api.test.ts`, `register()` posts JSON to `/api/auth/register` and surfaces 400/409 as `ApiError`.
   - In `frontend/src/features/auth/RegisterPage.test.tsx`:
     - Labelled fields for display name, email and password.
@@ -163,7 +163,7 @@ on its own.
     - Keyboard only: Tab moves through the fields in order and Enter submits (FR-017).
     - A network error shows "We couldn't reach the service. Please try again." and the values are kept except the password.
     - Success navigates to `/sign-in` with the email pre-filled and "Account created. You can now sign in.".
-- [ ] T027 [US1] Implement `frontend/src/features/auth/auth-api.ts` (`register`) and `frontend/src/features/auth/RegisterPage.tsx` (React Hook Form + Zod schema in `frontend/src/features/auth/schemas.ts`, `useMutation`). Add the `/register` route in `frontend/src/app/routes.tsx` and a minimal `/sign-in` placeholder that reads the pre-filled email from navigation state. T026 must then pass.
+- [X] T027 [US1] Implement `frontend/src/features/auth/auth-api.ts` (`register`) and `frontend/src/features/auth/RegisterPage.tsx` (React Hook Form + Zod schema in `frontend/src/features/auth/schemas.ts`, `useMutation`). Add the `/register` route in `frontend/src/app/routes.tsx` and a minimal `/sign-in` placeholder that reads the pre-filled email from navigation state. T026 must then pass.
 
 **Checkpoint**: US1 works on its own through the API and the SPA, and the full test suite is green.
 
