@@ -424,3 +424,13 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# ---- TaskLane ----
+# Local SQLite databases
+*.db
+*.db-shm
+*.db-wal
+# Coverage artifacts
+/artifacts/
+# Frontend build output
+/frontend/dist/
