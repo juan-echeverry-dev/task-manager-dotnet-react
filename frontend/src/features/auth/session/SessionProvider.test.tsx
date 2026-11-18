@@ -5,12 +5,15 @@ import { SESSION_STORAGE_KEY } from './session-storage'
 import { useSession } from './useSession'
 
 function Probe() {
-  const { session, signIn } = useSession()
+  const { session, signIn, signOut } = useSession()
   return (
     <div>
       <p>{session ? `token:${session.accessToken}` : 'anonymous'}</p>
       <button type="button" onClick={() => signIn({ accessToken: 'abc', expiresAt: '2026-11-18T10:00:00Z' })}>
         sign in
+      </button>
+      <button type="button" onClick={signOut}>
+        sign out
       </button>
     </div>
   )
@@ -50,4 +53,30 @@ describe('SessionProvider', () => {
       expect(sessionStorage.getItem(SESSION_STORAGE_KEY)).toBeNull()
     },
   )
+
+  it('restores the session of this tab after a reload', () => {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ accessToken: 'abc', expiresAt: '2099-01-01T00:00:00Z' }))
+
+    render(
+      <SessionProvider>
+        <Probe />
+      </SessionProvider>,
+    )
+
+    expect(screen.getByText('token:abc')).toBeInTheDocument()
+  })
+
+  it('clears the stored session when signing out', () => {
+    sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ accessToken: 'abc', expiresAt: '2099-01-01T00:00:00Z' }))
+    render(
+      <SessionProvider>
+        <Probe />
+      </SessionProvider>,
+    )
+
+    act(() => screen.getByRole('button', { name: 'sign out' }).click())
+
+    expect(screen.getByText('anonymous')).toBeInTheDocument()
+    expect(sessionStorage.getItem(SESSION_STORAGE_KEY)).toBeNull()
+  })
 })
