@@ -106,7 +106,7 @@ on its own.
   - Conflict → 409, Unauthorized → 401 and NotFound → 404, each as `ProblemDetails` with `title` and `detail`.
   - Success → the supplied success result.
 - [X] T016 Implement `ResultMappings` (extension methods on `ControllerBase` that map `Result`/`Result<T>` to `IActionResult`) in `src/TaskLane.Api/Common/ResultMappings.cs` until T015 passes.
-- [ ] T017 [P] Extend `tests/TaskLane.ArchitectureTests/FrameworkIndependenceTests.cs` so it asserts that Domain and Application do not reference `Microsoft.AspNetCore.Identity`, `Microsoft.IdentityModel` or `FluentValidation` (Domain only), and that Application does not reference `Microsoft.AspNetCore.Authentication`. Run it; it must pass.
+- [X] T017 [P] Extend `tests/TaskLane.ArchitectureTests/FrameworkIndependenceTests.cs` so it asserts that Domain and Application do not reference `Microsoft.AspNetCore.Identity`, `Microsoft.IdentityModel` or `FluentValidation` (Domain only), and that Application does not reference `Microsoft.AspNetCore.Authentication`. Run it; it must pass.
 
 **Checkpoint**: `dotnet test --solution TaskLane.slnx` is green, every endpoint requires authentication unless it opts out, and the `Users` table exists.
 
