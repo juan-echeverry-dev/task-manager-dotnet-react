@@ -5,8 +5,9 @@ following **Clean Architecture with vertical slices**, **EF Core + SQLite** pers
 **React + TypeScript** SPA. Development is **spec-driven** ([GitHub Spec Kit](https://github.com/github/spec-kit))
 and **test-driven**.
 
-> **Status**: architecture foundation. User registration and authentication are specified next
-> (`specs/001-user-authentication`); business features are added through their own specs.
+> **Status**: architecture foundation plus user registration and authentication
+> ([`specs/001-user-authentication`](specs/001-user-authentication/spec.md)). Business features are
+> added through their own specs.
 
 ## Documentation
 
@@ -52,7 +53,27 @@ npm run dev
 In Development the API applies EF Core migrations on startup and creates `tasklane.db` next to
 the API project. Delete the file to start from a clean database.
 
-**Demo credentials** are seeded by feature 001 and will be listed here.
+### Demo account
+
+On startup in **Development only**, the API provisions a demo account (idempotent: it is never
+duplicated and its password is never reset):
+
+| Email | Password |
+|---|---|
+| `demo@tasklane.dev` | `TaskLane-Demo-2026` |
+
+The credentials come from the `DemoAccount` section of `src/TaskLane.Api/appsettings.Development.json`.
+Other environments never create it.
+
+### Authentication
+
+- `POST /api/auth/register` and `POST /api/auth/sign-in` are anonymous; every other endpoint
+  requires `Authorization: Bearer <token>` by default (contract:
+  [`identity-api.md`](specs/001-user-authentication/contracts/identity-api.md)).
+- Tokens are HS256 JWTs valid for 60 minutes. Development uses the clearly marked key in
+  `appsettings.Development.json`; any other environment must provide
+  `Authentication__Jwt__SigningKey` (base64, ≥ 32 bytes) through user-secrets or environment
+  variables, or the API refuses to start.
 
 ## Running tests
 

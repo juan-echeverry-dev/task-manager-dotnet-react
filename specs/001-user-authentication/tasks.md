@@ -283,7 +283,7 @@ on its own.
   - It uses `User.Register`, `IPasswordHasher`, `TimeProvider` and `IUserRepository`.
   - Call it from `InitializeDatabaseAsync` in `src/TaskLane.Infrastructure/Persistence/DatabaseInitializer.cs`, which runs only in Development (`src/TaskLane.Api/Program.cs`).
   - Add the `DemoAccount` section (`demo@tasklane.dev`, `TaskLane-Demo-2026`, `Demo User`) to `src/TaskLane.Api/appsettings.Development.json`.
-- [ ] T045 [US4] Document the demo credentials and the "Development only" note in `README.md`, under a "Demo account" section.
+- [X] T045 [US4] Document the demo credentials and the "Development only" note in `README.md`, under a "Demo account" section.
 
 **Checkpoint**: All four user stories are independently functional.
 
