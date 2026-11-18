@@ -52,13 +52,13 @@ on its own.
 
 **⚠️ CRITICAL**: No user story work begins until this phase is complete.
 
-- [ ] T005 [P] Write failing unit tests for `Result`, `Result<T>` and `Error`, covering:
+- [X] T005 [P] Write failing unit tests for `Result`, `Result<T>` and `Error`, covering:
   - success and failure;
   - accessing `Value` on a failure throws;
   - the factories `Error.Validation(IReadOnlyDictionary<string, string[]>)`, `Error.Conflict(title, detail)`, `Error.Unauthorized(title, detail)` and `Error.NotFound(title, detail)` expose `ErrorType`.
 
   File: `tests/TaskLane.UnitTests/Common/ResultTests.cs`
-- [ ] T006 Implement `Result`, `Result<T>`, `Error` and `ErrorType` in `src/TaskLane.Application/Common/Results/` (one file per type) until T005 passes. Then remove the temporary `--ignore-exit-code 8` block from `tests/TaskLane.UnitTests/TaskLane.UnitTests.csproj`.
+- [X] T006 Implement `Result`, `Result<T>`, `Error` and `ErrorType` in `src/TaskLane.Application/Common/Results/` (one file per type) until T005 passes. Then remove the temporary `--ignore-exit-code 8` block from `tests/TaskLane.UnitTests/TaskLane.UnitTests.csproj`.
 - [ ] T007 [P] Write failing unit tests for `User.Register(id, email, displayName, passwordHash, createdAt)` and `User.NormalizeEmail`:
   - `Email` is trimmed; `NormalizedEmail` is the trimmed email lower-cased (invariant culture).
   - `DisplayName` is trimmed.
