@@ -13,9 +13,21 @@ internal sealed class PasswordHasherAdapter : Application.Identity.Ports.IPasswo
     // The framework hasher ignores the user argument; a single instance keeps its options.
     private readonly PasswordHasher<User> _hasher = new();
 
+    // Verified when an account does not exist, so that failure costs the same as a wrong password.
+    private readonly Lazy<string> _unknownAccountHash;
+
+    public PasswordHasherAdapter()
+    {
+        _unknownAccountHash = new Lazy<string>(() => Hash(Guid.NewGuid().ToString()));
+    }
+
     public string Hash(string password) => _hasher.HashPassword(null!, password);
 
-    public bool Verify(string passwordHash, string password) =>
-        _hasher.VerifyHashedPassword(null!, passwordHash, password) is
-            PasswordVerificationResult.Success or PasswordVerificationResult.SuccessRehashNeeded;
+    public bool Verify(string? passwordHash, string password)
+    {
+        var result = _hasher.VerifyHashedPassword(null!, passwordHash ?? _unknownAccountHash.Value, password);
+
+        return passwordHash is not null
+            && result is PasswordVerificationResult.Success or PasswordVerificationResult.SuccessRehashNeeded;
+    }
 }

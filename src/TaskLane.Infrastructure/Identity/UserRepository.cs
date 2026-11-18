@@ -29,4 +29,12 @@ internal sealed class UserRepository(AppDbContext dbContext) : IUserRepository
             return false;
         }
     }
+
+    public Task<User?> GetByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken) =>
+        dbContext.Users.AsNoTracking()
+            .SingleOrDefaultAsync(user => user.NormalizedEmail == normalizedEmail, cancellationToken);
+
+    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+        dbContext.Users.AsNoTracking()
+            .SingleOrDefaultAsync(user => user.Id == id, cancellationToken);
 }
