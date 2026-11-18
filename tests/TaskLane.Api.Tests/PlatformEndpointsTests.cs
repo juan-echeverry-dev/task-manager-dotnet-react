@@ -18,13 +18,14 @@ public sealed class PlatformEndpointsTests(ApiFactory factory) : IClassFixture<A
     }
 
     [Fact]
-    public async Task GetUnknownRoute_ReturnsProblemDetails()
+    public async Task GetUnknownRoute_WhenAnonymous_IsRefusedWithProblemDetails()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
 
         var response = await _client.GetAsync(new Uri("/does-not-exist", UriKind.Relative), cancellationToken);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        // The fallback policy also covers unmatched routes, so anonymous callers cannot probe for routes.
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
         response.Content.Headers.ContentType?.MediaType.ShouldBe("application/problem+json");
     }
 }

@@ -86,7 +86,7 @@ on its own.
   - It applies migrations on host start and disposes the connection with the factory.
   - It sets `Authentication:Jwt:*` test settings: issuer `tasklane-tests`, audience `tasklane-tests`, and a random 32-byte base64 signing key per factory.
   - It registers a `FakeTimeProvider` and `FakeLogCollector` (`AddFakeLogging`), exposed as properties.
-- [ ] T012 [P] Write failing API tests:
+- [X] T012 [P] Write failing API tests:
   - A test-only endpoint without `[AllowAnonymous]` returns 401 with Problem Details. Add it via a test controller in `tests/TaskLane.Api.Tests/Support/ProtectedProbeController.cs`, registered with `AddApplicationPart`.
   - `GET /health` still returns 200 anonymously.
   - An unexpected exception (test-only anonymous endpoint that throws, in `tests/TaskLane.Api.Tests/Support/ThrowingProbeController.cs`) returns 500 `application/problem+json`. The body contains no `exception`, `stackTrace`, exception message or connection string (FR-015).
@@ -96,7 +96,7 @@ on its own.
   - Bind it in `src/TaskLane.Infrastructure/DependencyInjection.cs` with validation and `ValidateOnStart`.
   - Add a clearly marked dev-only key (comment `"_comment": "DEVELOPMENT ONLY — never use outside local development"`) to `src/TaskLane.Api/appsettings.Development.json`.
   - Cover missing or short keys with a failing-first test in `tests/TaskLane.Infrastructure.Tests/DependencyInjectionTests.cs`.
-- [ ] T014 Implement authentication by default until T012 passes. Depends on T013 (`JwtOptions`).
+- [X] T014 Implement authentication by default until T012 passes. Depends on T013 (`JwtOptions`).
   - `src/TaskLane.Api/Identity/AuthenticationSetup.cs` adds `AddJwtBearer`. It validates issuer, audience, lifetime, signing key and algorithm HS256, uses `ClockSkew = TimeSpan.Zero`, `MapInboundClaims = false`, and the DI `TimeProvider`.
   - It reads `JwtOptions` (T013) and sets the fallback policy `RequireAuthenticatedUser`.
   - In `src/TaskLane.Api/Program.cs`, add `UseAuthentication`/`UseAuthorization`, and mark `MapHealthChecks`, `MapOpenApi` and `MapScalarApiReference` with `.AllowAnonymous()`.
