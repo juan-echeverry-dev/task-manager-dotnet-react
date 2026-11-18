@@ -12,4 +12,7 @@
     </PackageReference>
     <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="TaskLane.Api.Tests" />
+  </ItemGroup>
 </Project>

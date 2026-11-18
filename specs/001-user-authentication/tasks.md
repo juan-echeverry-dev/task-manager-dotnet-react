@@ -101,11 +101,11 @@ on its own.
   - It reads `JwtOptions` (T013) and sets the fallback policy `RequireAuthenticatedUser`.
   - In `src/TaskLane.Api/Program.cs`, add `UseAuthentication`/`UseAuthorization`, and mark `MapHealthChecks`, `MapOpenApi` and `MapScalarApiReference` with `.AllowAnonymous()`.
   - Make the 500 case of T012 pass: in non-Development environments, the exception handler must not include exception details.
-- [ ] T015 [P] Write failing unit tests for the mapping in `tests/TaskLane.Api.Tests/ResultMappingsTests.cs`:
+- [X] T015 [P] Write failing unit tests for the mapping in `tests/TaskLane.Api.Tests/ResultMappingsTests.cs`:
   - Validation → 400 `ValidationProblemDetails`, with field names in camelCase.
   - Conflict → 409, Unauthorized → 401 and NotFound → 404, each as `ProblemDetails` with `title` and `detail`.
   - Success → the supplied success result.
-- [ ] T016 Implement `ResultMappings` (extension methods on `ControllerBase` that map `Result`/`Result<T>` to `IActionResult`) in `src/TaskLane.Api/Common/ResultMappings.cs` until T015 passes.
+- [X] T016 Implement `ResultMappings` (extension methods on `ControllerBase` that map `Result`/`Result<T>` to `IActionResult`) in `src/TaskLane.Api/Common/ResultMappings.cs` until T015 passes.
 - [ ] T017 [P] Extend `tests/TaskLane.ArchitectureTests/FrameworkIndependenceTests.cs` so it asserts that Domain and Application do not reference `Microsoft.AspNetCore.Identity`, `Microsoft.IdentityModel` or `FluentValidation` (Domain only), and that Application does not reference `Microsoft.AspNetCore.Authentication`. Run it; it must pass.
 
 **Checkpoint**: `dotnet test --solution TaskLane.slnx` is green, every endpoint requires authentication unless it opts out, and the `Users` table exists.
