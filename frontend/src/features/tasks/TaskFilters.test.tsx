@@ -1,12 +1,12 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { defaultTaskQuery, type TaskQuery } from './task-query'
+import { defaultBoardQuery, type BoardQuery } from './board-query'
 import { TaskFilters } from './TaskFilters'
 
-function renderFilters(query: Partial<TaskQuery> = {}) {
+function renderFilters(query: Partial<BoardQuery> = {}) {
   const onChange = vi.fn()
-  render(<TaskFilters query={{ ...defaultTaskQuery(), ...query }} maxRangeDays={90} onChange={onChange} />)
+  render(<TaskFilters query={{ ...defaultBoardQuery(), ...query }} maxRangeDays={90} onChange={onChange} />)
   return { onChange, user: userEvent.setup() }
 }
 
@@ -14,10 +14,10 @@ describe('TaskFilters', () => {
   afterEach(() => vi.useRealTimers())
 
   it('renders labelled controls with the current values and the range hint', () => {
-    renderFilters({ search: 'demo', status: 'Done', dueFrom: '2026-12-01', dueTo: '2026-12-31', sort: 'title' })
+    renderFilters({ search: 'demo', dueFrom: '2026-12-01', dueTo: '2026-12-31', sort: 'title' })
 
     expect(screen.getByLabelText('Search')).toHaveValue('demo')
-    expect(screen.getByLabelText('Status')).toHaveValue('Done')
+    expect(screen.queryByLabelText('Status')).not.toBeInTheDocument()
     expect(screen.getByLabelText('Due from')).toHaveValue('2026-12-01')
     expect(screen.getByLabelText('Due to')).toHaveValue('2026-12-31')
     expect(screen.getByLabelText('Due to')).toHaveAccessibleDescription('Up to 90 days.')
@@ -35,7 +35,7 @@ describe('TaskFilters', () => {
   it('applies the search after the person stops typing for 300 ms', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     const onChange = vi.fn()
-    render(<TaskFilters query={defaultTaskQuery()} maxRangeDays={90} onChange={onChange} />)
+    render(<TaskFilters query={defaultBoardQuery()} maxRangeDays={90} onChange={onChange} />)
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'dem' } })
     act(() => vi.advanceTimersByTime(200))
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'demo' } })
@@ -46,16 +46,14 @@ describe('TaskFilters', () => {
     expect(onChange).toHaveBeenCalledExactlyOnceWith({ search: 'demo' })
   })
 
-  it('applies a status, a sort field and a direction at once', async () => {
+  it('applies a sort field and a direction', async () => {
     const { onChange, user } = renderFilters()
 
-    await user.selectOptions(screen.getByLabelText('Status'), 'InProgress')
     await user.selectOptions(screen.getByLabelText('Sort by'), 'createdAt')
     await user.selectOptions(screen.getByLabelText('Order'), 'desc')
 
-    expect(onChange).toHaveBeenNthCalledWith(1, { status: 'InProgress' })
-    expect(onChange).toHaveBeenNthCalledWith(2, { sort: 'createdAt' })
-    expect(onChange).toHaveBeenNthCalledWith(3, { direction: 'desc' })
+    expect(onChange).toHaveBeenNthCalledWith(1, { sort: 'createdAt' })
+    expect(onChange).toHaveBeenNthCalledWith(2, { direction: 'desc' })
   })
 
   it('applies a valid due-date range', async () => {
@@ -95,11 +93,11 @@ describe('TaskFilters', () => {
   })
 
   it('clears the search and every filter', async () => {
-    const { onChange, user } = renderFilters({ search: 'demo', status: 'Done', dueFrom: '2026-12-01', dueTo: '2026-12-31' })
+    const { onChange, user } = renderFilters({ search: 'demo', dueFrom: '2026-12-01', dueTo: '2026-12-31' })
 
     await user.click(screen.getByRole('button', { name: 'Clear search and filters' }))
 
-    expect(onChange).toHaveBeenCalledExactlyOnceWith({ search: '', status: '', dueFrom: '', dueTo: '' })
+    expect(onChange).toHaveBeenCalledExactlyOnceWith({ search: '', dueFrom: '', dueTo: '' })
     expect(screen.getByLabelText('Search')).toHaveValue('')
     expect(screen.getByLabelText('Due from')).toHaveValue('')
   })
