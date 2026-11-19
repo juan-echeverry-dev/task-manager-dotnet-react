@@ -34,6 +34,17 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
         return new PagedResult<TaskItem>(items, query.Page, query.PageSize, totalCount);
     }
 
+    public Task<TaskItem?> GetOwnedAsync(Guid id, Guid ownerId, CancellationToken cancellationToken) =>
+        context.Tasks.SingleOrDefaultAsync(task => task.Id == id && task.OwnerId == ownerId, cancellationToken);
+
+    // The task was loaded (and is tracked) by GetOwnedAsync in the same scope.
+    public async Task UpdateAsync(TaskItem task, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(task);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
     // Tasks without a due date always come last; ties go to the most recently created, then the id.
     private static IOrderedQueryable<TaskItem> Order(IQueryable<TaskItem> tasks) =>
         tasks
