@@ -24,6 +24,7 @@ public sealed class UpdateTaskHandlerTests
     public UpdateTaskHandlerTests()
     {
         _tasks.GetOwnedAsync(_task.Id, OwnerId, Arg.Any<CancellationToken>()).Returns(_task);
+        _tasks.UpdateAsync(_task, Arg.Any<CancellationToken>()).Returns(true);
         _handler = new UpdateTaskHandler(new UpdateTaskValidator(), _tasks, new FakeTimeProvider(Now));
     }
 
@@ -64,6 +65,17 @@ public sealed class UpdateTaskHandlerTests
         result.Error.Title.ShouldBe("Task not found");
         result.Error.Detail.ShouldBe("The task does not exist.");
         await _tasks.DidNotReceiveWithAnyArgs().UpdateAsync(default!, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task TaskDeletedWhileSaving_ReturnsNotFound()
+    {
+        _tasks.UpdateAsync(_task, Arg.Any<CancellationToken>()).Returns(false);
+
+        var result = await _handler.HandleAsync(Command(), TestContext.Current.CancellationToken);
+
+        result.Error!.Type.ShouldBe(ErrorType.NotFound);
+        result.Error.Title.ShouldBe("Task not found");
     }
 
     [Fact]

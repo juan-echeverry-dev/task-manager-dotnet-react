@@ -74,6 +74,14 @@ describe('TaskListPage', () => {
     expect(screen.getByRole('link', { name: 'Create your first task' })).toHaveAttribute('href', '/tasks/new')
   })
 
+  it('shows an empty page beyond the last one, for example after deleting its last task', async () => {
+    stubList(aPage([], { page: 3, pageSize: 20, totalCount: 40 }))
+    renderApp('/tasks?page=3')
+
+    expect(await screen.findByText('This page is empty.')).toBeInTheDocument()
+    expect(screen.getByText('40 tasks')).toBeInTheDocument()
+  })
+
   it('requests the page in the address and shows pagination', async () => {
     const fetchMock = stubList(aPage([aTask()], { page: 2, pageSize: 20, totalCount: 45 }))
     renderApp('/tasks?page=2')

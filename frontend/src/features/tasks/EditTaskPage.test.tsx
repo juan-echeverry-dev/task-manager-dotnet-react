@@ -107,6 +107,16 @@ describe('EditTaskPage', () => {
     expect(screen.getByRole('link', { name: 'Back to tasks' })).toHaveAttribute('href', '/tasks')
   })
 
+  it('returns to the list with an alert when the task was deleted meanwhile', async () => {
+    stubTaskApi(() => problemResponse(404, { title: 'Task not found', detail: 'The task does not exist.' }))
+    const { user, router } = await openForm()
+
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/tasks'))
+    expect(router.state.location.state).toEqual({ alert: 'This task no longer exists.' })
+  })
+
   it('returns to the read-only detail when the task was deleted meanwhile', async () => {
     stubTaskApi(() => problemResponse(409, { title: 'Task is deleted', detail: 'Restore the task before editing it.' }))
     const { user, router } = await openForm()

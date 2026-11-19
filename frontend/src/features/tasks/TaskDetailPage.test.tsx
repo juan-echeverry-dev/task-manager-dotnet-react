@@ -110,7 +110,7 @@ describe('TaskDetailPage', () => {
       const fetchMock = stubDelete()
       const { dialog } = await openDialog()
 
-      expect(dialog).toHaveAccessibleDescription('Delete this task? You can restore it from Deleted tasks.')
+      expect(dialog).toHaveAccessibleDescription("Delete this task permanently? This can't be undone.")
       expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(false)
     })
 
@@ -155,6 +155,16 @@ describe('TaskDetailPage', () => {
       await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
 
       expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't reach the service. Please try again.")
+    })
+
+    it('returns to the list with an alert when the task no longer exists', async () => {
+      stubDelete(() => problemResponse(404, { title: 'Task not found', detail: 'The task does not exist.' }))
+      const { user, dialog, router } = await openDialog()
+
+      await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+      await waitFor(() => expect(router.state.location.pathname).toBe('/tasks'))
+      expect(await screen.findByRole('alert')).toHaveTextContent('This task no longer exists.')
     })
   })
 
