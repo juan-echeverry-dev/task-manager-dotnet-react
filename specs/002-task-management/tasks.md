@@ -314,15 +314,15 @@ on its own.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T049 [P] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/DemoTasksSeederTests.cs`:
+- [X] T049 [P] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/DemoTasksSeederTests.cs`:
   - Seeding with an existing demo account and no tasks creates six tasks for it: all three statuses, one overdue `ToDo` (today − 3, from `FakeTimeProvider`), one without a due date, one `Done` with a past date.
   - Seeding again creates nothing.
   - After all demo tasks are soft-deleted, seeding creates nothing.
   - An edited demo task is not modified by seeding.
   - With no demo account or no `DemoAccount` configuration, nothing happens.
-- [ ] T050 Implement `DemoTasksSeeder` in `src/TaskLane.Infrastructure/Tasks/DemoTasksSeeder.cs` with a `SeedDemoTasksAsync()` extension, and call it after `SeedDemoAccountAsync()` in the Development block of `src/TaskLane.Api/Program.cs`. T049 must then pass.
-- [ ] T051 [P] Update `docs/architecture.md` (Tasks module table, module-boundary rule, list-query flow), `README.md` (tasks, demo tasks, and the `Tasks__DueDateRangeMaxDays` setting) and the "Where things go" examples in `CLAUDE.md` if needed.
-- [ ] T052 [P] Add sample requests for the eight task endpoints to `src/TaskLane.Api/TaskLane.Api.http`.
+- [X] T050 Implement `DemoTasksSeeder` in `src/TaskLane.Infrastructure/Tasks/DemoTasksSeeder.cs` with a `SeedDemoTasksAsync()` extension, and call it after `SeedDemoAccountAsync()` in the Development block of `src/TaskLane.Api/Program.cs`. T049 must then pass.
+- [X] T051 [P] Update `docs/architecture.md` (Tasks module table, module-boundary rule, list-query flow), `README.md` (tasks, demo tasks, and the `Tasks__DueDateRangeMaxDays` setting) and the "Where things go" examples in `CLAUDE.md` if needed.
+- [X] T052 [P] Add sample requests for the eight task endpoints to `src/TaskLane.Api/TaskLane.Api.http`.
 - [ ] T053 Run the automated gates from `specs/002-task-management/quickstart.md` §1:
   - `dotnet build` (0 warnings).
   - `dotnet format --verify-no-changes`.
