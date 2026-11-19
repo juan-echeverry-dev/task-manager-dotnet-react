@@ -75,7 +75,7 @@ on its own.
 - [X] T008 Implement `ClaimsPrincipalExtensions.GetUserId()` in `src/TaskLane.Api/Common/ClaimsPrincipalExtensions.cs` until T007 passes. Then make it a `refactor:` step: `src/TaskLane.Api/Identity/UsersController.cs` uses it, and all feature 001 tests stay green.
 - [X] T009 [P] Create `tests/TaskLane.ArchitectureTests/ModuleBoundaryTests.cs` with a module-boundary rule: types in namespaces `TaskLane.Domain.Tasks*`, `TaskLane.Application.Tasks*` and `TaskLane.Api.Tasks*` must not depend on types in `TaskLane.*.Identity*`. Infrastructure persistence configuration is exempt (research R11). Run it; it must pass, and it must fail during a temporary local experiment that references `User` from `TaskItem`, which you then revert.
 - [X] T010 [P] Add the shared types `PagedResult<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount)` in `src/TaskLane.Application/Tasks/PagedResult.cs` and `TaskResponse(Guid Id, string Title, string? Description, TaskItemStatus Status, DateOnly? DueDate, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, DateTimeOffset? DeletedAt)` with a static `From(TaskItem)` in `src/TaskLane.Application/Tasks/TaskResponse.cs`. Cover `From` with one unit test in `tests/TaskLane.UnitTests/Tasks/TaskResponseTests.cs`, written first.
-- [ ] T011 Configure JSON so `TaskItemStatus` serializes as a string (`JsonStringEnumConverter`) and `DateOnly` as `yyyy-MM-dd`: add `.AddJsonOptions(...)` in `src/TaskLane.Api/Program.cs`. Then run `dotnet test --solution TaskLane.slnx`: everything must be green.
+- [X] T011 Configure JSON so `TaskItemStatus` serializes as a string (`JsonStringEnumConverter`) and `DateOnly` as `yyyy-MM-dd`: add `.AddJsonOptions(...)` in `src/TaskLane.Api/Program.cs`. Then run `dotnet test --solution TaskLane.slnx`: everything must be green.
 
 **Checkpoint**: The `Tasks` table exists, owner ids are read from one helper, and the module boundary is enforced.
 
@@ -89,18 +89,18 @@ on its own.
 
 ### Tests for User Story 1 (write first, must fail)
 
-- [ ] T012 [P] [US1] Write failing validator tests in `tests/TaskLane.UnitTests/Tasks/CreateTask/CreateTaskValidatorTests.cs`, asserting each rule and exact message from data-model.md for title, description, status ("Optional; if present, one of the names") and dueDate ("Optional; `yyyy-MM-dd`; 2000-01-01 … 2099-12-31"). All invalid fields are reported together.
-- [ ] T013 [P] [US1] Write failing handler tests in `tests/TaskLane.UnitTests/Tasks/CreateTask/CreateTaskHandlerTests.cs`, with an NSubstitute `ITaskRepository` and `FakeTimeProvider`:
+- [X] T012 [P] [US1] Write failing validator tests in `tests/TaskLane.UnitTests/Tasks/CreateTask/CreateTaskValidatorTests.cs`, asserting each rule and exact message from data-model.md for title, description, status ("Optional; if present, one of the names") and dueDate ("Optional; `yyyy-MM-dd`; 2000-01-01 … 2099-12-31"). All invalid fields are reported together.
+- [X] T013 [P] [US1] Write failing handler tests in `tests/TaskLane.UnitTests/Tasks/CreateTask/CreateTaskHandlerTests.cs`, with an NSubstitute `ITaskRepository` and `FakeTimeProvider`:
   - A valid command → `AddAsync` receives a `TaskItem` with the given owner, trimmed title, parsed status (default `ToDo`), parsed due date, a v7 id and `CreatedAt = now`. Returns `TaskResponse`.
   - Invalid input → `Error.Validation` with field keys `Title`, `Description`, `Status`, `DueDate`, and the repository is not called.
-- [ ] T014 [P] [US1] Write failing list tests in `tests/TaskLane.UnitTests/Tasks/ListTasks/ListTasksValidatorTests.cs` for paging only: `page` "≥ 1" and `pageSize` "1–100", with the data-model messages.
-- [ ] T015 [P] [US1] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs`:
+- [X] T014 [P] [US1] Write failing list tests in `tests/TaskLane.UnitTests/Tasks/ListTasks/ListTasksValidatorTests.cs` for paging only: `page` "≥ 1" and `pageSize` "1–100", with the data-model messages.
+- [X] T015 [P] [US1] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs`:
   - `AddAsync` persists the task.
   - `ListAsync(ownerId, TaskListQuery.Default)` returns only that owner's active tasks.
   - Default order: due date ascending, no due date last, ties by `CreatedAt` descending, then `Id`.
   - Paging returns the right slice and `TotalCount`.
   - A page past the end returns empty `Items` with the real `TotalCount`.
-- [ ] T016 [P] [US1] Write failing API tests in `tests/TaskLane.Api.Tests/Tasks/CreateAndListTasksTests.cs`, using `RegisterAndSignInAsync` from feature 001:
+- [X] T016 [P] [US1] Write failing API tests in `tests/TaskLane.Api.Tests/Tasks/CreateAndListTasksTests.cs`, using `RegisterAndSignInAsync` from feature 001:
   - `POST /api/tasks` with `{ "title": "Prepare demo" }` → 201, `Location: /api/tasks/{id}`, body per `contracts/tasks-api.md` (`status: "ToDo"`, `dueDate: null`).
   - Full body → all values echoed; `dueDate` as `"2026-12-01"`.
   - Invalid body → 400 with `errors.title`, `errors.description`, `errors.status`, `errors.dueDate`.
@@ -111,15 +111,15 @@ on its own.
 
 ### Implementation for User Story 1
 
-- [ ] T017 [P] [US1] Create the port in `src/TaskLane.Application/Tasks/Ports/ITaskRepository.cs`:
+- [X] T017 [P] [US1] Create the port in `src/TaskLane.Application/Tasks/Ports/ITaskRepository.cs`:
   - Methods `Task AddAsync(TaskItem, CancellationToken)` and `Task<PagedResult<TaskItem>> ListAsync(Guid ownerId, TaskListQuery query, CancellationToken)`.
   - `TaskListQuery` record (`Search`, `Status`, `DueFrom`, `DueTo`, `Sort`, `Direction`, `Page`, `PageSize`, `Deleted`) with `Default` = active, `dueDate` ascending, page 1, size 20.
   - `TaskSortField` enum (`DueDate`, `CreatedAt`, `Title`, `DeletedAt`) and `SortDirection` enum.
-- [ ] T018 [US1] Implement the CreateTask slice in `src/TaskLane.Application/Tasks/CreateTask/` (`CreateTaskCommand(Guid OwnerId, string Title, string? Description, string? Status, string? DueDate)`, `CreateTaskValidator`, `CreateTaskHandler`) until T012 and T013 pass. Register it in `src/TaskLane.Application/DependencyInjection.cs`.
-- [ ] T019 [US1] Implement the ListTasks slice (paging and default order only) in `src/TaskLane.Application/Tasks/ListTasks/` (`ListTasksQuery(Guid OwnerId, bool Deleted, string? Search, string? Status, string? DueFrom, string? DueTo, string? Sort, string? Direction, int? Page, int? PageSize)`, `ListTasksValidator`, `ListTasksHandler` → `PagedResult<TaskResponse>`) until T014 passes. Register it in DI.
-- [ ] T020 [US1] Implement `TaskRepository.AddAsync` and `ListAsync` (owner-scoped, `DeletedAt == null`, default order, `Skip`/`Take`, `CountAsync`) in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` and register it scoped in `src/TaskLane.Infrastructure/DependencyInjection.cs` until T015 passes.
-- [ ] T021 [US1] Implement `POST /api/tasks` and `GET /api/tasks` in `src/TaskLane.Api/Tasks/TasksController.cs` (`[Route("api/tasks")]`, owner from `User.GetUserId()`, `CreateTaskRequest` in `src/TaskLane.Api/Tasks/CreateTaskRequest.cs`, query parameters bound with `[FromQuery]`, `ProducesResponseType` attributes) until T016 passes.
-- [ ] T022 [P] [US1] Write failing Vitest tests:
+- [X] T018 [US1] Implement the CreateTask slice in `src/TaskLane.Application/Tasks/CreateTask/` (`CreateTaskCommand(Guid OwnerId, string Title, string? Description, string? Status, string? DueDate)`, `CreateTaskValidator`, `CreateTaskHandler`) until T012 and T013 pass. Register it in `src/TaskLane.Application/DependencyInjection.cs`.
+- [X] T019 [US1] Implement the ListTasks slice (paging and default order only) in `src/TaskLane.Application/Tasks/ListTasks/` (`ListTasksQuery(Guid OwnerId, bool Deleted, string? Search, string? Status, string? DueFrom, string? DueTo, string? Sort, string? Direction, int? Page, int? PageSize)`, `ListTasksValidator`, `ListTasksHandler` → `PagedResult<TaskResponse>`) until T014 passes. Register it in DI.
+- [X] T020 [US1] Implement `TaskRepository.AddAsync` and `ListAsync` (owner-scoped, `DeletedAt == null`, default order, `Skip`/`Take`, `CountAsync`) in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` and register it scoped in `src/TaskLane.Infrastructure/DependencyInjection.cs` until T015 passes.
+- [X] T021 [US1] Implement `POST /api/tasks` and `GET /api/tasks` in `src/TaskLane.Api/Tasks/TasksController.cs` (`[Route("api/tasks")]`, owner from `User.GetUserId()`, `CreateTaskRequest` in `src/TaskLane.Api/Tasks/CreateTaskRequest.cs`, query parameters bound with `[FromQuery]`, `ProducesResponseType` attributes) until T016 passes.
+- [X] T022 [P] [US1] Write failing Vitest tests:
   - **`frontend/src/features/tasks/tasks-api.test.ts`:** `createTask` and `listTasks` send the bearer token, the JSON body and the query string.
   - **`frontend/src/features/tasks/overdue.test.ts`:** a past date and not Done → true; today → false; Done → false; no date → false.
   - **`frontend/src/shared/ui/SelectField.test.tsx` and `TextAreaField.test.tsx`:** label, `aria-invalid` and `aria-describedby`, as with `TextField`.
@@ -135,7 +135,7 @@ on its own.
     - the empty state "You have no tasks yet." links to `/tasks/new`;
     - pagination `nav` with `aria-current`;
     - "New task" link.
-- [ ] T023 [US1] Implement the US1 SPA until T022 passes:
+- [X] T023 [US1] Implement the US1 SPA until T022 passes:
   - **`frontend/src/features/tasks/tasks-api.ts`:** types `Task`, `TaskPage`, `TaskStatus`; `createTask` and `listTasks`.
   - **Tasks feature:** `frontend/src/features/tasks/overdue.ts`, `schemas.ts`, `TaskForm.tsx`, `NewTaskPage.tsx`, and `TaskListPage.tsx` (active mode, page only).
   - **Shared UI:** `frontend/src/shared/ui/SelectField.tsx`, `TextAreaField.tsx`, `Pagination.tsx`.
