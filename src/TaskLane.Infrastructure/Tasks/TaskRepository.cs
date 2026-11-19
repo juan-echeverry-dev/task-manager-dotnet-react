@@ -28,8 +28,16 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
 
         var totalCount = await tasks.CountAsync(cancellationToken);
 
+        // Computed as long: (page - 1) * pageSize can exceed int for large page numbers. A page past
+        // the end has no items, so it needs no query; otherwise the offset is below totalCount and fits.
+        var offset = (long)(query.Page - 1) * query.PageSize;
+        if (offset >= totalCount)
+        {
+            return new PagedResult<TaskItem>([], query.Page, query.PageSize, totalCount);
+        }
+
         var items = await Order(tasks, query)
-            .Skip((query.Page - 1) * query.PageSize)
+            .Skip((int)offset)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
 

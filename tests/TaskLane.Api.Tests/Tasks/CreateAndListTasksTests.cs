@@ -115,6 +115,22 @@ public sealed class CreateAndListTasksTests(ApiFactory factory) : IClassFixture<
         page.GetProperty("totalCount").GetInt32().ShouldBe(3);
     }
 
+    // Regression: a page number whose offset overflows int returned the first page's items.
+    [Fact]
+    public async Task List_WithHugePageNumber_ReturnsAnEmptyPageWithTheRealTotal()
+    {
+        var (_, token) = await _client.RegisterAndSignInAsync();
+        await _client.CreateTaskAndReadAsync(token, new { title = "Only" });
+
+        var response = await _client.GetAsync($"/api/tasks?page={int.MaxValue}", token);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var page = await response.ReadJsonAsync();
+        page.Titles().ShouldBeEmpty();
+        page.GetProperty("page").GetInt32().ShouldBe(int.MaxValue);
+        page.GetProperty("totalCount").GetInt32().ShouldBe(1);
+    }
+
     [Fact]
     public async Task List_OfAnotherAccount_DoesNotIncludeMyTasks()
     {
