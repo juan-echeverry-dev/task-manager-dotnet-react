@@ -1,23 +1,10 @@
 import { useEffect, useEffectEvent, useState } from 'react'
 import { SelectField } from '../../shared/ui/SelectField'
 import { TextField } from '../../shared/ui/TextField'
-import { STATUS_LABELS } from './format'
-import {
-  daysBetween,
-  hasFilters,
-  isDate,
-  SORT_FIELDS,
-  SORT_LABELS,
-  type TaskQuery,
-} from './task-query'
-import { TASK_STATUSES } from './tasks-api'
+import { daysBetween, hasFilters, isDate, SORT_FIELDS, SORT_LABELS, type BoardQuery } from './board-query'
 
 const SEARCH_DELAY_MS = 300
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'All statuses' },
-  ...TASK_STATUSES.map((status) => ({ value: status, label: STATUS_LABELS[status] })),
-]
 const DIRECTION_OPTIONS = [
   { value: 'asc', label: 'Ascending' },
   { value: 'desc', label: 'Descending' },
@@ -27,10 +14,10 @@ const buttonClass =
   'rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
 
 interface TaskFiltersProps {
-  query: TaskQuery
+  query: BoardQuery
   /** Longest due-date range allowed by the server; unknown until the settings load. */
   maxRangeDays: number | undefined
-  onChange: (changes: Partial<TaskQuery>) => void
+  onChange: (changes: Partial<BoardQuery>) => void
 }
 
 interface RangeErrors {
@@ -38,7 +25,7 @@ interface RangeErrors {
   dueTo?: string
 }
 
-/** Search, status, due-date range and sort controls of the task list (spec US4). */
+/** Search, due-date range and sort controls of the task board (spec 004 FR-014). */
 export function TaskFilters({ query, maxRangeDays, onChange }: TaskFiltersProps) {
   const [search, setSearch] = useState(query.search)
   const [dueFrom, setDueFrom] = useState(query.dueFrom)
@@ -78,28 +65,20 @@ export function TaskFilters({ query, maxRangeDays, onChange }: TaskFiltersProps)
     setDueFrom('')
     setDueTo('')
     setRangeErrors({})
-    onChange({ search: '', status: '', dueFrom: '', dueTo: '' })
+    onChange({ search: '', dueFrom: '', dueTo: '' })
   }
 
   const rangeHint = maxRangeDays === undefined ? undefined : `Up to ${maxRangeDays} days.`
 
   return (
     <div role="search" aria-label="Find tasks" className="space-y-4 rounded-md border border-slate-200 bg-white p-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField
-          label="Search"
-          type="search"
-          value={search}
-          maxLength={200}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <SelectField
-          label="Status"
-          options={STATUS_OPTIONS}
-          value={query.status}
-          onChange={(event) => onChange({ status: event.target.value as TaskQuery['status'] })}
-        />
-      </div>
+      <TextField
+        label="Search"
+        type="search"
+        value={search}
+        maxLength={200}
+        onChange={(event) => setSearch(event.target.value)}
+      />
 
       <form
         noValidate
@@ -134,13 +113,13 @@ export function TaskFilters({ query, maxRangeDays, onChange }: TaskFiltersProps)
           label="Sort by"
           options={SORT_FIELDS.map((field) => ({ value: field, label: SORT_LABELS[field] }))}
           value={query.sort}
-          onChange={(event) => onChange({ sort: event.target.value as TaskQuery['sort'] })}
+          onChange={(event) => onChange({ sort: event.target.value as BoardQuery['sort'] })}
         />
         <SelectField
           label="Order"
           options={DIRECTION_OPTIONS}
           value={query.direction}
-          onChange={(event) => onChange({ direction: event.target.value as TaskQuery['direction'] })}
+          onChange={(event) => onChange({ direction: event.target.value as BoardQuery['direction'] })}
         />
         {hasFilters(query) ? (
           <button type="button" className={buttonClass} onClick={clear}>
