@@ -8,6 +8,7 @@ using TaskLane.Application.Tasks;
 using TaskLane.Infrastructure;
 using TaskLane.Infrastructure.Identity;
 using TaskLane.Infrastructure.Persistence;
+using TaskLane.Infrastructure.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,6 +40,7 @@ if (app.Environment.IsDevelopment())
 {
     await app.Services.InitializeDatabaseAsync();
     await app.Services.SeedDemoAccountAsync();
+    await app.Services.SeedDemoTasksAsync();
 
     app.MapOpenApi().AllowAnonymous();
     app.MapScalarApiReference().AllowAnonymous();

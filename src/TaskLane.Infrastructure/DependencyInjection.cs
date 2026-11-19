@@ -51,6 +51,7 @@ public static class DependencyInjection
 
         services.AddOptions<DemoAccountOptions>().Bind(configuration.GetSection(DemoAccountOptions.SectionName));
         services.AddScoped<DemoAccountSeeder>();
+        services.AddScoped<DemoTasksSeeder>();
 
         return services;
     }
