@@ -1,4 +1,4 @@
-import { QueryCache, QueryClient, QueryClientProvider, type DefaultOptions } from '@tanstack/react-query'
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider, type DefaultOptions } from '@tanstack/react-query'
 import { useEffect, useState, type ReactNode } from 'react'
 import { RouterProvider, type createBrowserRouter } from 'react-router'
 import { SessionProvider } from '../features/auth/session/SessionProvider'
@@ -24,25 +24,25 @@ export function AppProviders({ router, queryDefaults }: AppProvidersProps) {
 }
 
 /**
- * Creates the query client. Any 401 from a query ends the session; the route guard then sends the
+ * Creates the query client. Any 401 from a query or a mutation ends the session; the route guard then sends the
  * person to sign-in. Cached server data is dropped whenever the session ends.
  */
 function SessionAwareQueryClient({ defaults, children }: { defaults: DefaultOptions | undefined; children: ReactNode }) {
   const { session, endRefusedSession } = useSession()
+  const endSessionOn401 = (error: unknown) => {
+    if (error instanceof ApiError && error.status === 401) endRefusedSession()
+  }
   const [queryClient] = useState(
     () =>
       new QueryClient({
         defaultOptions: defaults,
-        queryCache: new QueryCache({
-          onError: (error) => {
-            if (error instanceof ApiError && error.status === 401) endRefusedSession()
-          },
-        }),
+        queryCache: new QueryCache({ onError: endSessionOn401 }),
+        mutationCache: new MutationCache({ onError: endSessionOn401 }),
       }),
   )
 
   useEffect(() => {
-    if (!session) queryClient.removeQueries({ queryKey: ['profile'] })
+    if (!session) queryClient.removeQueries()
   }, [session, queryClient])
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

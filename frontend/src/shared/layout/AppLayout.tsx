@@ -17,9 +17,14 @@ export function AppLayout() {
           </Link>
           <nav aria-label="Account" className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             {session ? (
-              <Link to="/profile" className={linkClass}>
-                Profile
-              </Link>
+              <>
+                <Link to="/tasks" className={linkClass}>
+                  Tasks
+                </Link>
+                <Link to="/profile" className={linkClass}>
+                  Profile
+                </Link>
+              </>
             ) : (
               <>
                 <Link to="/sign-in" className={linkClass}>
