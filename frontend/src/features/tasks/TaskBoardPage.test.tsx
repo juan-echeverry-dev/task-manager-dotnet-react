@@ -259,6 +259,55 @@ describe('TaskBoardPage', () => {
       ])
     })
 
+    it('has no status filter, since the columns are the statuses', async () => {
+      stubBoard({ ToDo: tasksOf('ToDo', 1) })
+      renderApp('/tasks')
+
+      await screen.findByRole('list', { name: 'To do' })
+      expect(within(screen.getByRole('search', { name: 'Find tasks' })).queryByLabelText('Status')).not.toBeInTheDocument()
+    })
+
+    it('applies a due-date range to every column', async () => {
+      const fetchMock = stubBoard({ ToDo: tasksOf('ToDo', 1) })
+      const { router } = renderApp('/tasks')
+      const user = userEvent.setup()
+      await screen.findByRole('list', { name: 'To do' })
+
+      await user.type(screen.getByLabelText('Due from'), '2026-12-01')
+      await user.type(screen.getByLabelText('Due to'), '2026-12-31')
+      await user.click(screen.getByRole('button', { name: 'Apply' }))
+
+      expect(router.state.location.search).toBe('?dueFrom=2026-12-01&dueTo=2026-12-31')
+      await waitFor(() =>
+        expect(columnCalls(fetchMock).filter((params) => params.get('dueFrom') === '2026-12-01')).toHaveLength(3),
+      )
+    })
+
+    it('starts every column again from its first batch when the search changes', async () => {
+      vi.useRealTimers()
+      stubBoard({ ToDo: tasksOf('ToDo', 25) })
+      const { router } = renderApp('/tasks')
+      const user = userEvent.setup()
+      const list = await screen.findByRole('list', { name: 'To do' })
+      await user.click(await within(column('To do')).findByRole('button', { name: 'Load more' }))
+      await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(25))
+
+      await user.type(screen.getByLabelText('Search'), 'ToDo')
+
+      await waitFor(() => expect(router.state.location.search).toBe('?search=ToDo'), { timeout: 2000 })
+      await waitFor(() => expect(within(screen.getByRole('list', { name: 'To do' })).getAllByRole('listitem')).toHaveLength(20))
+    })
+
+    it('clears the search and range from the filter bar, keeping the sort', async () => {
+      stubBoard({ ToDo: tasksOf('ToDo', 1) })
+      const { router } = renderApp('/tasks?search=ToDo&dueFrom=2026-12-01&dueTo=2026-12-31&sort=title')
+      const user = userEvent.setup()
+
+      await user.click(within(await screen.findByRole('search', { name: 'Find tasks' })).getByRole('button', { name: 'Clear search and filters' }))
+
+      expect(router.state.location.search).toBe('?sort=title')
+    })
+
     it('shows the configured maximum range from the settings', async () => {
       stubBoard({ ToDo: tasksOf('ToDo', 1) })
       renderApp('/tasks')

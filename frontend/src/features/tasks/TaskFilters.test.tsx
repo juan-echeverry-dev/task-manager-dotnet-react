@@ -25,6 +25,24 @@ describe('TaskFilters', () => {
     expect(screen.getByLabelText('Order')).toHaveValue('asc')
   })
 
+  it('lays out every control in one search bar, in order, with no status filter', () => {
+    renderFilters({ search: 'demo' })
+
+    const bars = screen.getAllByRole('search')
+    expect(bars).toHaveLength(1)
+    const controls = Array.from((bars[0] as HTMLElement).querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLButtonElement>('input, select, button'))
+    expect(controls.map((control) => control.labels?.[0]?.textContent ?? control.textContent)).toEqual([
+      'Search',
+      'Due from',
+      'Due to',
+      'Apply',
+      'Sort by',
+      'Order',
+      'Clear search and filters',
+    ])
+    expect(screen.queryByLabelText('Status')).not.toBeInTheDocument()
+  })
+
   it('offers sorting by due date, creation date and title only', () => {
     renderFilters()
 
