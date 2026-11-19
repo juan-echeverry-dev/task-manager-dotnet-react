@@ -4,6 +4,7 @@ using Scalar.AspNetCore;
 
 using TaskLane.Api.Identity;
 using TaskLane.Application;
+using TaskLane.Application.Tasks;
 using TaskLane.Infrastructure;
 using TaskLane.Infrastructure.Identity;
 using TaskLane.Infrastructure.Persistence;
@@ -13,6 +14,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration);
+
+builder.Services.AddOptions<TaskListOptions>()
+    .Bind(builder.Configuration.GetSection(TaskListOptions.SectionName))
+    .Validate(
+        options => options.IsValid(),
+        $"Tasks:DueDateRangeMaxDays must be between {TaskListOptions.MinDueDateRangeMaxDays} and {TaskListOptions.MaxDueDateRangeMaxDays}.")
+    .ValidateOnStart();
 
 builder.Services.AddTokenAuthentication();
 builder.Services.AddControllers()

@@ -25,11 +25,19 @@ public sealed class ListTasksHandler(IValidator<ListTasksQuery> validator, ITask
             ? field
             : ListSorting.DefaultField(query.Deleted);
 
+        var direction = ListSorting.TryParseDirection(query.Direction, out var requested)
+            ? requested
+            : ListSorting.DefaultDirection(sort);
+
         var listQuery = TaskListQuery.Default with
         {
             Deleted = query.Deleted,
+            Search = string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
+            Status = TaskInputFormat.ParseOptionalStatus(query.Status),
+            DueFrom = TaskInputFormat.ParseOptionalDate(query.DueFrom),
+            DueTo = TaskInputFormat.ParseOptionalDate(query.DueTo),
             Sort = sort,
-            Direction = ListSorting.DefaultDirection(sort),
+            Direction = direction,
             Page = query.Page ?? 1,
             PageSize = query.PageSize ?? TaskListQuery.DefaultPageSize,
         };

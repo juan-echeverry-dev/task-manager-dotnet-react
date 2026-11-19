@@ -22,6 +22,18 @@ internal static class ListSorting
     public static bool TryParseField(string? value, bool deleted, out TaskSortField field) =>
         Fields(deleted).TryGetValue(value ?? string.Empty, out field);
 
+    /// <summary>Accepts <c>asc</c> and <c>desc</c> exactly.</summary>
+    public static bool TryParseDirection(string? value, out TaskSortDirection direction)
+    {
+        (var known, direction) = value switch
+        {
+            "asc" => (true, TaskSortDirection.Ascending),
+            "desc" => (true, TaskSortDirection.Descending),
+            _ => (false, default),
+        };
+        return known;
+    }
+
     /// <summary>Most recently deleted first in the deleted list; earliest due date first otherwise.</summary>
     public static TaskSortField DefaultField(bool deleted) => deleted ? TaskSortField.DeletedAt : TaskSortField.DueDate;
 
