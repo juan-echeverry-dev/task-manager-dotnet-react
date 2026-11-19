@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router'
 import { Pagination } from '../../shared/ui/Pagination'
 import { useSession } from '../auth/session/useSession'
-import { formatDate, STATUS_LABELS } from './format'
+import { OverdueBadge, StatusBadge } from './badges'
+import { formatDate } from './format'
 import { taskMessages } from './messages'
 import { isOverdue, localToday } from './overdue'
 import { listTasks, type Task } from './tasks-api'
@@ -88,20 +89,6 @@ function TaskRow({ task, today }: { task: Task; today: string }) {
       </div>
     </li>
   )
-}
-
-export function StatusBadge({ status }: { status: Task['status'] }) {
-  const tone =
-    status === 'Done'
-      ? 'bg-emerald-100 text-emerald-800'
-      : status === 'InProgress'
-        ? 'bg-amber-100 text-amber-900'
-        : 'bg-slate-100 text-slate-800'
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}>{STATUS_LABELS[status]}</span>
-}
-
-export function OverdueBadge() {
-  return <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Overdue</span>
 }
 
 function parsePage(value: string | null): number {

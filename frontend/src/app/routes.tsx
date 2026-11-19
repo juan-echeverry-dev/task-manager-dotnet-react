@@ -4,7 +4,9 @@ import { RegisterPage } from '../features/auth/RegisterPage'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { SignInPage } from '../features/auth/SignInPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
+import { EditTaskPage } from '../features/tasks/EditTaskPage'
 import { NewTaskPage } from '../features/tasks/NewTaskPage'
+import { TaskDetailPage } from '../features/tasks/TaskDetailPage'
 import { TaskListPage } from '../features/tasks/TaskListPage'
 import { AppLayout } from '../shared/layout/AppLayout'
 import { HomePage } from './routes/HomePage'
@@ -29,6 +31,8 @@ export const routes: RouteObject[] = [
           { path: 'profile', element: <ProfilePage /> },
           { path: 'tasks', element: <TaskListPage /> },
           { path: 'tasks/new', element: <NewTaskPage /> },
+          { path: 'tasks/:id', element: <TaskDetailPage /> },
+          { path: 'tasks/:id/edit', element: <EditTaskPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

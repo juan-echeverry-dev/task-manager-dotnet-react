@@ -41,6 +41,18 @@ export function createTask(input: TaskInput, accessToken: string): Promise<Task>
   )
 }
 
+export function getTask(id: string, accessToken: string): Promise<Task> {
+  return request<Task>(`/api/tasks/${encodeURIComponent(id)}`, {}, { accessToken })
+}
+
+export function updateTask(id: string, input: TaskInput, accessToken: string): Promise<Task> {
+  return request<Task>(
+    `/api/tasks/${encodeURIComponent(id)}`,
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) },
+    { accessToken },
+  )
+}
+
 export function listTasks(params: ListTasksParams, accessToken: string): Promise<TaskPage> {
   return request<TaskPage>(withQuery('/api/tasks', params), {}, { accessToken })
 }
