@@ -1,5 +1,7 @@
 # Contract: Tasks HTTP API
 
+> **Amended by [spec 003](../../003-permanent-task-deletion/spec.md)**: deletion is permanent; the deleted-tasks list and restore were removed.
+
 Conventions:
 - They follow ADR 0010 and feature 001.
 - JSON bodies use camelCase.

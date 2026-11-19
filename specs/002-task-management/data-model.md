@@ -1,5 +1,7 @@
 # Data Model: Task Management
 
+> **Amended by [spec 003](../003-permanent-task-deletion/spec.md)**: deletion is permanent; the deleted-tasks list and restore were removed.
+
 ## Entity: `TaskItem` (Domain, `TaskLane.Domain.Tasks`)
 
 | Field | Type | Rules |

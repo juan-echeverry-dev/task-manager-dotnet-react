@@ -14,7 +14,7 @@ function Harness({ onConfirm = vi.fn(), pending = false }: { onConfirm?: () => v
       <ConfirmDialog
         open={open}
         title="Delete task"
-        message="Delete this task? You can restore it from Deleted tasks."
+        message="Delete this task permanently? This can't be undone."
         confirmLabel="Delete"
         pendingLabel="Deleting…"
         pending={pending}
@@ -39,7 +39,7 @@ describe('ConfirmDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Delete' }))
 
     const dialog = screen.getByRole('dialog', { name: 'Delete task' })
-    expect(dialog).toHaveAccessibleDescription('Delete this task? You can restore it from Deleted tasks.')
+    expect(dialog).toHaveAccessibleDescription("Delete this task permanently? This can't be undone.")
     expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus()
   })

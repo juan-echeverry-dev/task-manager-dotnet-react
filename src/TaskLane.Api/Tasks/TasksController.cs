@@ -7,7 +7,6 @@ using TaskLane.Application.Tasks.CreateTask;
 using TaskLane.Application.Tasks.DeleteTask;
 using TaskLane.Application.Tasks.GetTask;
 using TaskLane.Application.Tasks.ListTasks;
-using TaskLane.Application.Tasks.RestoreTask;
 using TaskLane.Application.Tasks.UpdateTask;
 
 namespace TaskLane.Api.Tasks;
@@ -28,18 +27,9 @@ public sealed class TasksController : ControllerBase
         [FromQuery] TaskListRequest request,
         [FromServices] ListTasksHandler handler,
         CancellationToken cancellationToken) =>
-        ListAsync(deleted: false, request, handler, cancellationToken);
+        ListAsync(request, handler, cancellationToken);
 
-    // "deleted" and "settings" are declared before "{id:guid}"; the guid constraint also keeps them apart.
-    [HttpGet("deleted")]
-    [ProducesResponseType<PagedResult<TaskResponse>>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
-    public Task<IActionResult> ListDeleted(
-        [FromQuery] TaskListRequest request,
-        [FromServices] ListTasksHandler handler,
-        CancellationToken cancellationToken) =>
-        ListAsync(deleted: true, request, handler, cancellationToken);
-
+    // "settings" is declared before "{id:guid}"; the guid constraint also keeps them apart.
     [HttpGet("settings")]
     [ProducesResponseType<TaskSettingsResponse>(StatusCodes.Status200OK)]
     public IActionResult GetSettings([FromServices] IOptions<TaskListOptions> options)
@@ -96,7 +86,6 @@ public sealed class TasksController : ControllerBase
     [ProducesResponseType<TaskResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
     public async Task<IActionResult> Update(
         Guid id,
         UpdateTaskRequest request,
@@ -138,28 +127,7 @@ public sealed class TasksController : ControllerBase
         return result.ToActionResult(_ => NoContent());
     }
 
-    [HttpPost("{id:guid}/restore")]
-    [ProducesResponseType<TaskResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
-    public async Task<IActionResult> Restore(
-        Guid id,
-        [FromServices] RestoreTaskHandler handler,
-        CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(handler);
-
-        if (User.GetUserId() is not { } ownerId)
-        {
-            return InvalidSession();
-        }
-
-        var result = await handler.HandleAsync(new RestoreTaskCommand(ownerId, id), cancellationToken);
-
-        return result.ToActionResult(Ok);
-    }
-
     private async Task<IActionResult> ListAsync(
-        bool deleted,
         TaskListRequest request,
         ListTasksHandler handler,
         CancellationToken cancellationToken)
@@ -175,7 +143,6 @@ public sealed class TasksController : ControllerBase
         var result = await handler.HandleAsync(
             new ListTasksQuery(
                 ownerId,
-                deleted,
                 request.Search,
                 request.Status,
                 request.DueFrom,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { defaultTaskQuery, hasFilters, parseTaskQuery, serializeTaskQuery, toApiParams, withChanges } from './task-query'
 
-const parse = (search: string, mode: 'active' | 'deleted' = 'active') => parseTaskQuery(new URLSearchParams(search), mode)
+const parse = (search: string) => parseTaskQuery(new URLSearchParams(search))
 
 describe('parseTaskQuery', () => {
   it('uses the defaults when the address has no state', () => {
@@ -15,10 +15,6 @@ describe('parseTaskQuery', () => {
       page: 1,
       pageSize: 20,
     })
-  })
-
-  it('defaults to the most recently deleted first in the deleted list', () => {
-    expect(parse('', 'deleted')).toMatchObject({ sort: 'deletedAt', direction: 'desc' })
   })
 
   it('reads every valid value', () => {
@@ -56,27 +52,22 @@ describe('parseTaskQuery', () => {
   ])('drops the invalid value in %s', (search, expected) => {
     expect(parse(search)).toMatchObject(expected)
   })
-
-  it('accepts sorting by deletion date in the deleted list', () => {
-    expect(parse('sort=deletedAt&direction=asc', 'deleted')).toMatchObject({ sort: 'deletedAt', direction: 'asc' })
-  })
 })
 
 describe('serializeTaskQuery', () => {
   it('omits the defaults', () => {
-    expect(serializeTaskQuery(defaultTaskQuery('active'), 'active').toString()).toBe('')
-    expect(serializeTaskQuery(defaultTaskQuery('deleted'), 'deleted').toString()).toBe('')
+    expect(serializeTaskQuery(defaultTaskQuery()).toString()).toBe('')
   })
 
   it('round-trips a full query', () => {
     const search = 'search=demo&status=Done&dueFrom=2026-12-01&dueTo=2026-12-31&sort=title&direction=desc&page=3&pageSize=50'
 
-    expect(serializeTaskQuery(parse(search), 'active').toString()).toBe(search)
+    expect(serializeTaskQuery(parse(search)).toString()).toBe(search)
   })
 
   it('omits a direction equal to the default of the sort field', () => {
-    expect(serializeTaskQuery(parse('sort=createdAt&direction=desc'), 'active').toString()).toBe('sort=createdAt')
-    expect(serializeTaskQuery(parse('sort=createdAt&direction=asc'), 'active').toString()).toBe(
+    expect(serializeTaskQuery(parse('sort=createdAt&direction=desc')).toString()).toBe('sort=createdAt')
+    expect(serializeTaskQuery(parse('sort=createdAt&direction=asc')).toString()).toBe(
       'sort=createdAt&direction=asc',
     )
   })
@@ -113,6 +104,6 @@ describe('hasFilters', () => {
 
 describe('toApiParams', () => {
   it('sends only the values that differ from the defaults, with the API names', () => {
-    expect(toApiParams(parse('search=demo&sort=title&page=2'), 'active')).toEqual({ search: 'demo', sort: 'title', page: '2' })
+    expect(toApiParams(parse('search=demo&sort=title&page=2'))).toEqual({ search: 'demo', sort: 'title', page: '2' })
   })
 })

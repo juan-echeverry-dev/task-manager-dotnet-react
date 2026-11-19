@@ -20,7 +20,6 @@ public sealed class TaskPersistenceTests
             Guid.CreateVersion7(), owner.Id, "Prepare demo", "Slides", TaskItemStatus.InProgress,
             new DateOnly(2026, 12, 1), Now.AddTicks(1234567));
         task.Update("Prepare demo", "Slides and seed data", TaskItemStatus.Done, new DateOnly(2026, 12, 2), Now.AddMinutes(30));
-        task.Delete(Now.AddHours(1));
 
         await using (var context = database.CreateContext())
         {
@@ -38,7 +37,6 @@ public sealed class TaskPersistenceTests
         saved.DueDate.ShouldBe(new DateOnly(2026, 12, 2));
         saved.CreatedAt.ShouldBe(Now.AddTicks(1234567));
         saved.UpdatedAt.ShouldBe(Now.AddMinutes(30));
-        saved.DeletedAt.ShouldBe(Now.AddHours(1));
     }
 
     [Fact]
@@ -81,8 +79,6 @@ public sealed class TaskPersistenceTests
         var owner = await AddUserAsync(database, cancellationToken);
         var older = NewTask(owner.Id, Now);
         var newer = NewTask(owner.Id, Now.AddMinutes(5));
-        older.Delete(Now.AddHours(2));
-        newer.Delete(Now.AddHours(1));
         await using (var context = database.CreateContext())
         {
             context.Tasks.AddRange(older, newer);
@@ -91,10 +87,8 @@ public sealed class TaskPersistenceTests
 
         await using var readContext = database.CreateContext();
         var byCreated = await readContext.Tasks.OrderByDescending(task => task.CreatedAt).Select(task => task.Id).ToListAsync(cancellationToken);
-        var byDeleted = await readContext.Tasks.OrderByDescending(task => task.DeletedAt).Select(task => task.Id).ToListAsync(cancellationToken);
 
         byCreated.ShouldBe([newer.Id, older.Id]);
-        byDeleted.ShouldBe([older.Id, newer.Id]);
     }
 
     private static TaskItem NewTask(Guid ownerId, DateTimeOffset? createdAt = null) =>

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace TaskLane.Application.Tasks.ListTasks;
 
-/// <summary>List query rules (spec FR-014, FR-016 to FR-018, FR-023; data-model.md).</summary>
+/// <summary>List query rules (spec FR-016 to FR-018, FR-023; data-model.md).</summary>
 public sealed class ListTasksValidator : AbstractValidator<ListTasksQuery>
 {
     public const int MaxPageSize = 100;
@@ -36,8 +36,8 @@ public sealed class ListTasksValidator : AbstractValidator<ListTasksQuery>
             .WithMessage($"Choose a range of at most {maxRangeDays} days.");
 
         RuleFor(query => query.Sort)
-            .Must((query, sort) => sort is null || ListSorting.TryParseField(sort, query.Deleted, out _))
-            .WithMessage(query => $"Sort must be one of: {ListSorting.FieldNames(query.Deleted)}.");
+            .Must(sort => sort is null || ListSorting.TryParseField(sort, out _))
+            .WithMessage($"Sort must be one of: {ListSorting.FieldNames}.");
 
         RuleFor(query => query.Direction)
             .Must(direction => direction is null || ListSorting.TryParseDirection(direction, out _))

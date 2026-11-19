@@ -7,7 +7,7 @@ using TaskLane.Application.Tasks.Ports;
 namespace TaskLane.Application.Tasks.ListTasks;
 
 /// <summary>
-/// Lists the signed-in person's active or deleted tasks, one page at a time (spec FR-014, FR-016 to FR-018).
+/// Lists the signed-in person's tasks, one page at a time (spec FR-016 to FR-018).
 /// </summary>
 public sealed class ListTasksHandler(IValidator<ListTasksQuery> validator, ITaskRepository tasks)
 {
@@ -21,9 +21,7 @@ public sealed class ListTasksHandler(IValidator<ListTasksQuery> validator, ITask
             return Result.Failure<PagedResult<TaskResponse>>(validation.ToError());
         }
 
-        var sort = ListSorting.TryParseField(query.Sort, query.Deleted, out var field)
-            ? field
-            : ListSorting.DefaultField(query.Deleted);
+        var sort = ListSorting.TryParseField(query.Sort, out var field) ? field : TaskSortField.DueDate;
 
         var direction = ListSorting.TryParseDirection(query.Direction, out var requested)
             ? requested
@@ -31,7 +29,6 @@ public sealed class ListTasksHandler(IValidator<ListTasksQuery> validator, ITask
 
         var listQuery = TaskListQuery.Default with
         {
-            Deleted = query.Deleted,
             Search = string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim(),
             Status = TaskInputFormat.ParseOptionalStatus(query.Status),
             DueFrom = TaskInputFormat.ParseOptionalDate(query.DueFrom),

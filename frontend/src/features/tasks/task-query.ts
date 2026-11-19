@@ -4,8 +4,7 @@ import { TASK_STATUSES, type TaskStatus } from './tasks-api'
  * List state kept in the address (spec FR-019, contracts/spa-routes.md). Names match the API query
  * parameters; defaults are left out of the address, and invalid values fall back to the defaults.
  */
-export type TaskListMode = 'active' | 'deleted'
-export type SortField = 'dueDate' | 'createdAt' | 'title' | 'deletedAt'
+export type SortField = 'dueDate' | 'createdAt' | 'title'
 export type SortDirection = 'asc' | 'desc'
 
 export interface TaskQuery {
@@ -23,24 +22,21 @@ export const SORT_LABELS: Record<SortField, string> = {
   dueDate: 'Due date',
   createdAt: 'Created',
   title: 'Title',
-  deletedAt: 'Deleted on',
 }
 
 const DEFAULT_PAGE_SIZE = 20
 const MAX_PAGE_SIZE = 100
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
-export function sortFields(mode: TaskListMode): SortField[] {
-  return mode === 'deleted' ? ['dueDate', 'createdAt', 'title', 'deletedAt'] : ['dueDate', 'createdAt', 'title']
-}
+export const SORT_FIELDS: readonly SortField[] = ['dueDate', 'createdAt', 'title']
 
-/** Creation and deletion dates read newest first; due dates and titles read ascending. */
+/** Creation dates read newest first; due dates and titles read ascending. */
 export function defaultDirection(sort: SortField): SortDirection {
-  return sort === 'createdAt' || sort === 'deletedAt' ? 'desc' : 'asc'
+  return sort === 'createdAt' ? 'desc' : 'asc'
 }
 
-export function defaultTaskQuery(mode: TaskListMode): TaskQuery {
-  const sort: SortField = mode === 'deleted' ? 'deletedAt' : 'dueDate'
+export function defaultTaskQuery(): TaskQuery {
+  const sort: SortField = 'dueDate'
   return {
     search: '',
     status: '',
@@ -53,11 +49,11 @@ export function defaultTaskQuery(mode: TaskListMode): TaskQuery {
   }
 }
 
-export function parseTaskQuery(params: URLSearchParams, mode: TaskListMode): TaskQuery {
-  const defaults = defaultTaskQuery(mode)
+export function parseTaskQuery(params: URLSearchParams): TaskQuery {
+  const defaults = defaultTaskQuery()
   const status = params.get('status')
   const sort = params.get('sort')
-  const parsedSort = sortFields(mode).find((field) => field === sort) ?? defaults.sort
+  const parsedSort = SORT_FIELDS.find((field) => field === sort) ?? defaults.sort
   const direction = params.get('direction')
   const dueFrom = params.get('dueFrom') ?? ''
   const dueTo = params.get('dueTo') ?? ''
@@ -75,8 +71,8 @@ export function parseTaskQuery(params: URLSearchParams, mode: TaskListMode): Tas
   }
 }
 
-export function serializeTaskQuery(query: TaskQuery, mode: TaskListMode): URLSearchParams {
-  const defaults = defaultTaskQuery(mode)
+export function serializeTaskQuery(query: TaskQuery): URLSearchParams {
+  const defaults = defaultTaskQuery()
   const params = new URLSearchParams()
   if (query.search) params.set('search', query.search)
   if (query.status) params.set('status', query.status)
@@ -106,8 +102,8 @@ export function hasFilters(query: TaskQuery): boolean {
   return query.search !== '' || query.status !== '' || (query.dueFrom !== '' && query.dueTo !== '')
 }
 
-export function toApiParams(query: TaskQuery, mode: TaskListMode): Record<string, string> {
-  return Object.fromEntries(serializeTaskQuery(query, mode))
+export function toApiParams(query: TaskQuery): Record<string, string> {
+  return Object.fromEntries(serializeTaskQuery(query))
 }
 
 export function isDate(value: string): boolean {

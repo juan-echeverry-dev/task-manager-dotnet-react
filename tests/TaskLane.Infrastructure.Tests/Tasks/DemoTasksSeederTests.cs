@@ -39,7 +39,7 @@ public sealed class DemoTasksSeederTests : IAsyncLifetime
 
         var tasks = await TasksAsync();
         tasks.Count.ShouldBe(6);
-        tasks.ShouldAllBe(task => task.OwnerId == demoId && task.DeletedAt == null);
+        tasks.ShouldAllBe(task => task.OwnerId == demoId);
         tasks.Select(task => task.Status).Distinct().ShouldBe(
             [TaskItemStatus.ToDo, TaskItemStatus.InProgress, TaskItemStatus.Done], ignoreOrder: true);
         tasks.ShouldContain(task => task.Status == TaskItemStatus.ToDo && task.DueDate == Today.AddDays(-3));
@@ -61,25 +61,19 @@ public sealed class DemoTasksSeederTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Seed_AfterEveryDemoTaskWasDeleted_CreatesNothing()
+    public async Task Seed_AfterEveryDemoTaskWasDeleted_CreatesThemAgain()
     {
+        // Deletion is permanent (spec 003, Assumptions): an account with no tasks left is seeded again.
         await AddUserAsync(Demo.Email);
         await SeedAsync(Demo);
         await using (var context = _database.CreateContext())
         {
-            foreach (var task in await context.Tasks.ToListAsync(CancellationToken))
-            {
-                task.Delete(Now.AddHours(1));
-            }
-
-            await context.SaveChangesAsync(CancellationToken);
+            await context.Tasks.ExecuteDeleteAsync(CancellationToken);
         }
 
         await SeedAsync(Demo);
 
-        var tasks = await TasksAsync();
-        tasks.Count.ShouldBe(6);
-        tasks.ShouldAllBe(task => task.DeletedAt != null);
+        (await TasksAsync()).Count.ShouldBe(6);
     }
 
     [Fact]

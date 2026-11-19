@@ -4,16 +4,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defaultTaskQuery, type TaskQuery } from './task-query'
 import { TaskFilters } from './TaskFilters'
 
-function renderFilters(query: Partial<TaskQuery> = {}, mode: 'active' | 'deleted' = 'active') {
+function renderFilters(query: Partial<TaskQuery> = {}) {
   const onChange = vi.fn()
-  render(
-    <TaskFilters
-      query={{ ...defaultTaskQuery(mode), ...query }}
-      mode={mode}
-      maxRangeDays={90}
-      onChange={onChange}
-    />,
-  )
+  render(<TaskFilters query={{ ...defaultTaskQuery(), ...query }} maxRangeDays={90} onChange={onChange} />)
   return { onChange, user: userEvent.setup() }
 }
 
@@ -32,16 +25,17 @@ describe('TaskFilters', () => {
     expect(screen.getByLabelText('Order')).toHaveValue('asc')
   })
 
-  it('offers sorting by deletion date only in the deleted list', () => {
-    renderFilters({}, 'deleted')
+  it('offers sorting by due date, creation date and title only', () => {
+    renderFilters()
 
-    expect(screen.getByRole('option', { name: 'Deleted on' })).toBeInTheDocument()
+    const options = Array.from((screen.getByLabelText('Sort by') as HTMLSelectElement).options).map((option) => option.text)
+    expect(options).toEqual(['Due date', 'Created', 'Title'])
   })
 
   it('applies the search after the person stops typing for 300 ms', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     const onChange = vi.fn()
-    render(<TaskFilters query={defaultTaskQuery('active')} mode="active" maxRangeDays={90} onChange={onChange} />)
+    render(<TaskFilters query={defaultTaskQuery()} maxRangeDays={90} onChange={onChange} />)
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'dem' } })
     act(() => vi.advanceTimersByTime(200))
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'demo' } })

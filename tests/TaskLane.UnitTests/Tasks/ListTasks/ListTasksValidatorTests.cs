@@ -10,7 +10,7 @@ public sealed class ListTasksValidatorTests
     private readonly ListTasksValidator _validator = new(Options.Create(new TaskListOptions()));
 
     private static ListTasksQuery Active() =>
-        new(Guid.CreateVersion7(), Deleted: false, null, null, null, null, null, null, null, null);
+        new(Guid.CreateVersion7(), null, null, null, null, null, null, null, null);
 
     [Fact]
     public void NoParameters_Passes()
@@ -55,30 +55,20 @@ public sealed class ListTasksValidatorTests
     [InlineData("dueDate")]
     [InlineData("createdAt")]
     [InlineData("title")]
-    public void Sort_KnownField_PassesInBothLists(string sort)
+    public void Sort_KnownField_Passes(string sort)
     {
         ErrorsFor(Active() with { Sort = sort }, "Sort").ShouldBeEmpty();
-        ErrorsFor(Active() with { Deleted = true, Sort = sort }, "Sort").ShouldBeEmpty();
-    }
-
-    [Fact]
-    public void Sort_DeletedAt_PassesOnlyInTheDeletedList()
-    {
-        ErrorsFor(Active() with { Deleted = true, Sort = "deletedAt" }, "Sort").ShouldBeEmpty();
-        ErrorsFor(Active() with { Sort = "deletedAt" }, "Sort")
-            .ShouldBe(["Sort must be one of: dueDate, createdAt, title."]);
     }
 
     [Theory]
     [InlineData("DueDate")]
     [InlineData("priority")]
+    [InlineData("deletedAt")]
     [InlineData("")]
-    public void Sort_Unknown_IsRejectedWithTheFieldsOfThatList(string sort)
+    public void Sort_Unknown_IsRejectedWithTheKnownFields(string sort)
     {
         ErrorsFor(Active() with { Sort = sort }, "Sort")
             .ShouldBe(["Sort must be one of: dueDate, createdAt, title."]);
-        ErrorsFor(Active() with { Deleted = true, Sort = sort }, "Sort")
-            .ShouldBe(["Sort must be one of: dueDate, createdAt, title, deletedAt."]);
     }
 
     [Fact]

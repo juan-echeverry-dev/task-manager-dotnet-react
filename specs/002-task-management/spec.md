@@ -1,5 +1,7 @@
 # Feature Specification: Task Management
 
+> **Amended by [spec 003](../003-permanent-task-deletion/spec.md)**: deletion is permanent; the deleted-tasks list and restore were removed.
+
 **Feature Branch**: `002-task-management`
 
 **Created**: 2026-11-18

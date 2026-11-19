@@ -6,9 +6,8 @@ import {
   daysBetween,
   hasFilters,
   isDate,
+  SORT_FIELDS,
   SORT_LABELS,
-  sortFields,
-  type TaskListMode,
   type TaskQuery,
 } from './task-query'
 import { TASK_STATUSES } from './tasks-api'
@@ -29,7 +28,6 @@ const buttonClass =
 
 interface TaskFiltersProps {
   query: TaskQuery
-  mode: TaskListMode
   /** Longest due-date range allowed by the server; unknown until the settings load. */
   maxRangeDays: number | undefined
   onChange: (changes: Partial<TaskQuery>) => void
@@ -40,8 +38,8 @@ interface RangeErrors {
   dueTo?: string
 }
 
-/** Search, status, due-date range and sort controls of the task lists (spec US4). */
-export function TaskFilters({ query, mode, maxRangeDays, onChange }: TaskFiltersProps) {
+/** Search, status, due-date range and sort controls of the task list (spec US4). */
+export function TaskFilters({ query, maxRangeDays, onChange }: TaskFiltersProps) {
   const [search, setSearch] = useState(query.search)
   const [dueFrom, setDueFrom] = useState(query.dueFrom)
   const [dueTo, setDueTo] = useState(query.dueTo)
@@ -134,7 +132,7 @@ export function TaskFilters({ query, mode, maxRangeDays, onChange }: TaskFilters
       <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
         <SelectField
           label="Sort by"
-          options={sortFields(mode).map((field) => ({ value: field, label: SORT_LABELS[field] }))}
+          options={SORT_FIELDS.map((field) => ({ value: field, label: SORT_LABELS[field] }))}
           value={query.sort}
           onChange={(event) => onChange({ sort: event.target.value as TaskQuery['sort'] })}
         />

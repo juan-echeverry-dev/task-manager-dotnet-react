@@ -21,17 +21,10 @@ public sealed class GetTaskHandlerTests
         _handler = new GetTaskHandler(_tasks);
     }
 
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task OwnedTask_ActiveOrDeleted_IsReturned(bool deleted)
+    [Fact]
+    public async Task OwnedTask_IsReturned()
     {
         var task = TaskItem.Create(Guid.CreateVersion7(), OwnerId, "Prepare demo", null, null, null, Now);
-        if (deleted)
-        {
-            task.Delete(Now.AddHours(1));
-        }
-
         _tasks.GetOwnedAsync(task.Id, OwnerId, Arg.Any<CancellationToken>()).Returns(task);
 
         var result = await _handler.HandleAsync(new GetTaskQuery(OwnerId, task.Id), TestContext.Current.CancellationToken);

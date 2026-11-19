@@ -11,8 +11,9 @@ namespace TaskLane.Infrastructure.Tasks;
 
 /// <summary>
 /// Gives the demo account six sample tasks: every status, an overdue task, a finished task with a past
-/// date, and a task without a due date. Runs only when the account has no tasks at all, deleted ones
-/// included, so restarts never duplicate them or undo what a presenter did (spec, Assumptions).
+/// date, and a task without a due date. Runs only when the account has no tasks, so restarts never
+/// duplicate them or undo what a presenter edited. Deletion is permanent, so an account whose tasks were
+/// all deleted is seeded again (spec 003, Assumptions).
 /// </summary>
 internal sealed class DemoTasksSeeder(
     IOptions<DemoAccountOptions> options,
@@ -21,7 +22,7 @@ internal sealed class DemoTasksSeeder(
 {
     private static readonly SampleTask[] Samples =
     [
-        new("Prepare the TaskLane demo", "Walk through creating, finding and restoring tasks.", TaskItemStatus.InProgress, 2),
+        new("Prepare the TaskLane demo", "Walk through creating, finding and deleting tasks.", TaskItemStatus.InProgress, 2),
         new("Review pull request feedback", "Answer the open review comments.", TaskItemStatus.ToDo, -3),
         new("Write the release notes", null, TaskItemStatus.ToDo, 7),
         new("Book a room for the retrospective", null, TaskItemStatus.Done, -5),

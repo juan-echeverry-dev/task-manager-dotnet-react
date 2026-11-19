@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { jsonResponse, problemResponse, stubFetch } from '../../test/fetch'
 import { renderApp } from '../../test/render'
 import { signedIn } from '../../test/session'
-import { formatTimestamp } from './format'
 import { aPage, aTask } from './test-data'
 
 const dueFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
@@ -74,6 +73,14 @@ describe('TaskListPage', () => {
     expect(screen.getByRole('link', { name: 'Create your first task' })).toHaveAttribute('href', '/tasks/new')
   })
 
+  it('shows an empty page beyond the last one, for example after deleting its last task', async () => {
+    stubList(aPage([], { page: 3, pageSize: 20, totalCount: 40 }))
+    renderApp('/tasks?page=3')
+
+    expect(await screen.findByText('This page is empty.')).toBeInTheDocument()
+    expect(screen.getByText('40 tasks')).toBeInTheDocument()
+  })
+
   it('requests the page in the address and shows pagination', async () => {
     const fetchMock = stubList(aPage([aTask()], { page: 2, pageSize: 20, totalCount: 45 }))
     renderApp('/tasks?page=2')
@@ -111,11 +118,13 @@ describe('TaskListPage', () => {
     expect(within(nav).getByRole('link', { name: 'Tasks' })).toHaveAttribute('href', '/tasks')
   })
 
-  it('links to the deleted tasks', async () => {
+  it('offers no deleted-tasks area', async () => {
     stubList(aPage([aTask()]))
     renderApp('/tasks')
 
-    expect(await screen.findByRole('link', { name: 'Deleted tasks' })).toHaveAttribute('href', '/tasks/deleted')
+    await screen.findByRole('list', { name: 'Tasks' })
+    expect(screen.queryByRole('link', { name: 'Deleted tasks' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'Deleted on' })).not.toBeInTheDocument()
   })
 
   it('shows the status message passed by the previous screen', async () => {
@@ -124,40 +133,6 @@ describe('TaskListPage', () => {
     await router.navigate('/tasks', { state: { status: 'Task deleted.' } })
 
     expect(await screen.findByText('Task deleted.')).toHaveAttribute('role', 'status')
-  })
-
-  describe('deleted mode', () => {
-    it('lists deleted tasks with their deletion date', async () => {
-      const deletedAt = '2026-11-17T10:00:00+00:00'
-      const fetchMock = stubList(aPage([aTask({ id: 'a', title: 'Old task', deletedAt, dueDate: '2026-11-01' })]))
-      renderApp('/tasks/deleted')
-
-      expect(await screen.findByRole('heading', { name: 'Deleted tasks' })).toBeInTheDocument()
-      const list = await screen.findByRole('list', { name: 'Deleted tasks' })
-      const [row] = within(list).getAllByRole('listitem') as [HTMLElement]
-      expect(within(row).getByRole('link', { name: 'Old task' })).toHaveAttribute('href', '/tasks/a')
-      expect(within(row).getByText(`Deleted ${formatTimestamp(deletedAt)}`)).toBeInTheDocument()
-      expect(within(row).queryByText('Overdue')).not.toBeInTheDocument()
-      expect(fetchMock.mock.calls.some(([url]) => url === '/api/tasks/deleted')).toBe(true)
-      expect(screen.queryByRole('link', { name: 'New task' })).not.toBeInTheDocument()
-      expect(screen.getByRole('link', { name: 'Back to tasks' })).toHaveAttribute('href', '/tasks')
-    })
-
-    it('shows its own empty state', async () => {
-      stubList(aPage([]))
-      renderApp('/tasks/deleted')
-
-      expect(await screen.findByText('No deleted tasks.')).toBeInTheDocument()
-      expect(screen.queryByRole('link', { name: 'Create your first task' })).not.toBeInTheDocument()
-    })
-
-    it('keeps its own address when paging', async () => {
-      stubList(aPage([aTask()], { page: 1, pageSize: 20, totalCount: 30 }))
-      renderApp('/tasks/deleted')
-
-      const nav = await screen.findByRole('navigation', { name: 'Pagination' })
-      expect(within(nav).getByRole('link', { name: 'Page 2' })).toHaveAttribute('href', '/tasks/deleted?page=2')
-    })
   })
 
   describe('finding tasks', () => {
@@ -230,17 +205,6 @@ describe('TaskListPage', () => {
       await user.click(clearButtons.at(-1) as HTMLElement)
 
       expect(router.state.location.search).toBe('?sort=title')
-    })
-
-    it('offers the same tools in the deleted list', async () => {
-      const fetchMock = stubList(aPage([aTask({ deletedAt: '2026-11-17T10:00:00+00:00' })]))
-      renderApp('/tasks/deleted?search=demo&sort=deletedAt&direction=asc')
-
-      await screen.findByRole('list', { name: 'Deleted tasks' })
-      expect(listCalls(fetchMock)).toContain('/api/tasks/deleted?search=demo&direction=asc')
-      expect(screen.getByLabelText('Search')).toBeInTheDocument()
-      expect(screen.getByLabelText('Sort by')).toHaveValue('deletedAt')
-      expect(screen.getByLabelText('Due from')).toBeInTheDocument()
     })
 
     it('shows the reason when the API refuses the query', async () => {

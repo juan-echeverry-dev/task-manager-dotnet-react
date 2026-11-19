@@ -24,6 +24,7 @@ public sealed class UpdateTaskHandlerTests
     public UpdateTaskHandlerTests()
     {
         _tasks.GetOwnedAsync(_task.Id, OwnerId, Arg.Any<CancellationToken>()).Returns(_task);
+        _tasks.UpdateAsync(_task, Arg.Any<CancellationToken>()).Returns(true);
         _handler = new UpdateTaskHandler(new UpdateTaskValidator(), _tasks, new FakeTimeProvider(Now));
     }
 
@@ -67,17 +68,14 @@ public sealed class UpdateTaskHandlerTests
     }
 
     [Fact]
-    public async Task DeletedTask_ReturnsConflictWithoutChanges()
+    public async Task TaskDeletedWhileSaving_ReturnsNotFound()
     {
-        _task.Delete(CreatedAt.AddMinutes(30));
+        _tasks.UpdateAsync(_task, Arg.Any<CancellationToken>()).Returns(false);
 
         var result = await _handler.HandleAsync(Command(), TestContext.Current.CancellationToken);
 
-        result.Error!.Type.ShouldBe(ErrorType.Conflict);
-        result.Error.Title.ShouldBe("Task is deleted");
-        result.Error.Detail.ShouldBe("Restore the task before editing it.");
-        _task.Title.ShouldBe("Prepare demo");
-        await _tasks.DidNotReceiveWithAnyArgs().UpdateAsync(default!, TestContext.Current.CancellationToken);
+        result.Error!.Type.ShouldBe(ErrorType.NotFound);
+        result.Error.Title.ShouldBe("Task not found");
     }
 
     [Fact]

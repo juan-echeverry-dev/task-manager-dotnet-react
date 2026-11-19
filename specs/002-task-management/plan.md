@@ -1,5 +1,7 @@
 # Implementation Plan: Task Management
 
+> **Amended by [spec 003](../003-permanent-task-deletion/spec.md)**: deletion is permanent; the deleted-tasks list and restore were removed.
+
 **Branch**: `002-task-management` | **Date**: 2026-11-18 | **Spec**: [spec.md](spec.md)
 
 **Input**: Feature specification from `specs/002-task-management/spec.md`

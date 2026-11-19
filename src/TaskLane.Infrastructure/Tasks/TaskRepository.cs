@@ -22,8 +22,7 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
 
         var tasks = Filter(
             context.Tasks.AsNoTracking()
-                .Where(task => task.OwnerId == ownerId)
-                .Where(task => query.Deleted ? task.DeletedAt != null : task.DeletedAt == null),
+                .Where(task => task.OwnerId == ownerId),
             query);
 
         var totalCount = await tasks.CountAsync(cancellationToken);
@@ -47,13 +46,29 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
     public Task<TaskItem?> GetOwnedAsync(Guid id, Guid ownerId, CancellationToken cancellationToken) =>
         context.Tasks.SingleOrDefaultAsync(task => task.Id == id && task.OwnerId == ownerId, cancellationToken);
 
-    // The task was loaded (and is tracked) by GetOwnedAsync in the same scope.
-    public async Task UpdateAsync(TaskItem task, CancellationToken cancellationToken)
+    // The task was loaded (and is tracked) by GetOwnedAsync in the same scope. EF Core reports an
+    // UPDATE that affected no row as a concurrency failure: the task was deleted in the meantime.
+    public async Task<bool> UpdateAsync(TaskItem task, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(task);
 
-        await context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            context.Entry(task).State = EntityState.Detached;
+            return false;
+        }
     }
+
+    // One owner-scoped statement: a concurrent second delete simply matches no row.
+    public async Task<bool> DeleteOwnedAsync(Guid id, Guid ownerId, CancellationToken cancellationToken) =>
+        await context.Tasks
+            .Where(task => task.Id == id && task.OwnerId == ownerId)
+            .ExecuteDeleteAsync(cancellationToken) > 0;
 
     private static IQueryable<TaskItem> Filter(IQueryable<TaskItem> tasks, TaskListQuery query)
     {
@@ -104,9 +119,6 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
             TaskSortField.Title => descending
                 ? tasks.OrderByDescending(task => EF.Functions.Collate(task.Title, "NOCASE"))
                 : tasks.OrderBy(task => EF.Functions.Collate(task.Title, "NOCASE")),
-            TaskSortField.DeletedAt => descending
-                ? tasks.OrderByDescending(task => task.DeletedAt)
-                : tasks.OrderBy(task => task.DeletedAt),
             _ => throw new ArgumentOutOfRangeException(nameof(query), query.Sort, "Unknown sort field."),
         };
 

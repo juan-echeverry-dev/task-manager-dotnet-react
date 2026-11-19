@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link, Navigate, useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { ApiError } from '../../shared/api/http-client'
 import { taskMessages, type TaskStatusState } from './messages'
 import type { TaskFormValues } from './schemas'
@@ -8,7 +8,7 @@ import { TaskNotFound } from './TaskNotFound'
 import { updateTask, type Task, type TaskInput } from './tasks-api'
 import { useTask } from './useTask'
 
-/** Edit screen (spec US2, FR-015). Rendered only inside RequireAuth. */
+/** Edit screen (spec US2). Rendered only inside RequireAuth. */
 export function EditTaskPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
@@ -17,8 +17,6 @@ export function EditTaskPage() {
   const mutation = useMutation({ mutationFn: (input: TaskInput) => updateTask(id, input, task.accessToken) })
 
   if (task.notFound) return <TaskNotFound />
-  // A deleted task is read-only: its detail explains how to restore it.
-  if (task.data?.deletedAt) return <Navigate to={`/tasks/${id}`} replace />
 
   const save = async (input: TaskInput) => {
     await mutation.mutateAsync(input)
@@ -27,12 +25,12 @@ export function EditTaskPage() {
     await navigate(`/tasks/${id}`, { state })
   }
 
-  // Deleted in another tab after this form was opened (409).
+  // Deleted in another tab after this form was opened (spec 003 FR-003).
   const handleError = (error: unknown) => {
-    if (!(error instanceof ApiError && error.status === 409)) return false
-    // Leave first: refreshing the task here would redirect without the explanation.
-    const state: TaskStatusState = { alert: taskMessages.deletedRestoreToEdit }
-    void Promise.resolve(navigate(`/tasks/${id}`, { state })).then(() => queryClient.invalidateQueries({ queryKey: ['tasks'] }))
+    if (!(error instanceof ApiError && error.status === 404)) return false
+    // Leave first: refreshing the task here would show "Task not found" without the explanation.
+    const state: TaskStatusState = { alert: taskMessages.noLongerExists }
+    void Promise.resolve(navigate('/tasks', { state })).then(() => queryClient.invalidateQueries({ queryKey: ['tasks'] }))
     return true
   }
 

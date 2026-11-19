@@ -10,7 +10,6 @@ export function aTask(overrides: Partial<Task> = {}): Task {
     dueDate: null,
     createdAt: '2026-11-18T09:00:00+00:00',
     updatedAt: '2026-11-18T09:00:00+00:00',
-    deletedAt: null,
     ...overrides,
   }
 }
