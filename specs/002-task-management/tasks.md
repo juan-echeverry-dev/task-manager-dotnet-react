@@ -155,7 +155,7 @@ on its own.
 
 ### Tests for User Story 2 (write first, must fail)
 
-- [ ] T024 [P] [US2] Write failing unit tests:
+- [X] T024 [P] [US2] Write failing unit tests:
   - `tests/TaskLane.UnitTests/Tasks/UpdateTask/UpdateTaskValidatorTests.cs`: same rules as create, except `status` is "Required; one of the names" with "Status is required.".
   - `tests/TaskLane.UnitTests/Tasks/UpdateTask/UpdateTaskHandlerTests.cs`:
     - valid → task updated with `UpdatedAt = now` and `UpdateAsync` called;
@@ -163,11 +163,11 @@ on its own.
     - a deleted task → `Error.Conflict("Task is deleted", "Restore the task before editing it.")`, not saved;
     - invalid → `Error.Validation`, with no lookup.
   - `tests/TaskLane.UnitTests/Tasks/GetTask/GetTaskHandlerTests.cs`: found (active or deleted) → `TaskResponse`; missing → `Error.NotFound`.
-- [ ] T025 [P] [US2] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs`:
+- [X] T025 [P] [US2] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs`:
   - `GetOwnedAsync(id, ownerId)` returns the task (deleted included).
   - It returns null for another owner's id or an unknown id.
   - `UpdateAsync` persists the changes.
-- [ ] T026 [P] [US2] Write failing API tests in `tests/TaskLane.Api.Tests/Tasks/GetAndUpdateTaskTests.cs`:
+- [X] T026 [P] [US2] Write failing API tests in `tests/TaskLane.Api.Tests/Tasks/GetAndUpdateTaskTests.cs`:
   - GET 200.
   - PUT 200 with the new values, then GET shows them.
   - PUT with `description: null, dueDate: null` clears them.
@@ -177,10 +177,10 @@ on its own.
 
 ### Implementation for User Story 2
 
-- [ ] T027 [P] [US2] Add `Task<TaskItem?> GetOwnedAsync(Guid id, Guid ownerId, CancellationToken)` (tracked) and `Task UpdateAsync(TaskItem, CancellationToken)` to `src/TaskLane.Application/Tasks/Ports/ITaskRepository.cs` and implement them in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T025 passes.
-- [ ] T028 [US2] Implement `src/TaskLane.Application/Tasks/GetTask/` (`GetTaskQuery(Guid OwnerId, Guid TaskId)`, `GetTaskHandler`) and `src/TaskLane.Application/Tasks/UpdateTask/` (`UpdateTaskCommand(Guid OwnerId, Guid TaskId, string Title, string? Description, string? Status, string? DueDate)`, `UpdateTaskValidator`, `UpdateTaskHandler`) until T024 passes. Share the title, description and due-date rules with create through `src/TaskLane.Application/Tasks/TaskFieldRules.cs` (a deviation from the rule of three, justified in plan.md Complexity Tracking). Register both in DI.
-- [ ] T029 [US2] Add `GET /api/tasks/{id:guid}` and `PUT /api/tasks/{id:guid}` (`UpdateTaskRequest` in `src/TaskLane.Api/Tasks/UpdateTaskRequest.cs`) to `src/TaskLane.Api/Tasks/TasksController.cs` until T026 passes.
-- [ ] T030 [P] [US2] Write failing Vitest tests:
+- [X] T027 [P] [US2] Add `Task<TaskItem?> GetOwnedAsync(Guid id, Guid ownerId, CancellationToken)` (tracked) and `Task UpdateAsync(TaskItem, CancellationToken)` to `src/TaskLane.Application/Tasks/Ports/ITaskRepository.cs` and implement them in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T025 passes.
+- [X] T028 [US2] Implement `src/TaskLane.Application/Tasks/GetTask/` (`GetTaskQuery(Guid OwnerId, Guid TaskId)`, `GetTaskHandler`) and `src/TaskLane.Application/Tasks/UpdateTask/` (`UpdateTaskCommand(Guid OwnerId, Guid TaskId, string Title, string? Description, string? Status, string? DueDate)`, `UpdateTaskValidator`, `UpdateTaskHandler`) until T024 passes. Share the title, description and due-date rules with create through `src/TaskLane.Application/Tasks/TaskFieldRules.cs` (a deviation from the rule of three, justified in plan.md Complexity Tracking). Register both in DI.
+- [X] T029 [US2] Add `GET /api/tasks/{id:guid}` and `PUT /api/tasks/{id:guid}` (`UpdateTaskRequest` in `src/TaskLane.Api/Tasks/UpdateTaskRequest.cs`) to `src/TaskLane.Api/Tasks/TasksController.cs` until T026 passes.
+- [X] T030 [P] [US2] Write failing Vitest tests:
   - **`frontend/src/features/tasks/TaskDetailPage.test.tsx`:**
     - shows title, description, status, due date, created and updated (local format);
     - "Overdue" badge when it applies;
@@ -194,7 +194,7 @@ on its own.
     - a 404 shows "Task not found" with a link to `/tasks`;
     - a network error shows "We couldn't reach the service. Please try again." and keeps the values;
     - success → `/tasks/:id` with "Task updated.".
-- [ ] T031 [US2] Implement `getTask` and `updateTask` in `frontend/src/features/tasks/tasks-api.ts`, plus `frontend/src/features/tasks/TaskDetailPage.tsx` (active mode) and `frontend/src/features/tasks/EditTaskPage.tsx` (reusing `TaskForm`). Add `/tasks/:id` and `/tasks/:id/edit` routes in `frontend/src/app/routes.tsx`. T030 must then pass.
+- [X] T031 [US2] Implement `getTask` and `updateTask` in `frontend/src/features/tasks/tasks-api.ts`, plus `frontend/src/features/tasks/TaskDetailPage.tsx` (active mode) and `frontend/src/features/tasks/EditTaskPage.tsx` (reusing `TaskForm`). Add `/tasks/:id` and `/tasks/:id/edit` routes in `frontend/src/app/routes.tsx`. T030 must then pass.
 
 **Checkpoint**: US1 and US2 work together: create, list, view and edit, with ownership enforced.
 
