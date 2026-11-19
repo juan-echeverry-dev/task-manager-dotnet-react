@@ -17,6 +17,7 @@ accepted; a decision is changed by adding a new ADR that supersedes the old one.
 | [0009](0009-frontend-stack.md) | Frontend stack | Accepted |
 | [0010](0010-http-api-conventions.md) | HTTP API conventions | Accepted |
 | [0011](0011-permanent-task-deletion.md) | Permanent task deletion | Accepted |
+| [0012](0012-task-board-routed-side-panel.md) | Task board with a routed side panel | Accepted |
 
 Template for new ADRs:
 

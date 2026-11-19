@@ -72,14 +72,18 @@ no tasks at all, deleted ones included, so restarts never duplicate them or undo
 ### Tasks
 
 Signed-in people manage their own tasks at `/tasks` (contract:
-[`tasks-api.md`](specs/002-task-management/contracts/tasks-api.md)):
+[`tasks-api.md`](specs/002-task-management/contracts/tasks-api.md); screens:
+[`spa-routes.md`](specs/004-task-board/contracts/spa-routes.md)):
 
-- Create, view, edit and delete tasks with a title, an optional description, a status (To do,
-  In progress, Done) and an optional due date. Unfinished tasks past their due date are marked
-  **Overdue**.
-- Deleting asks for confirmation and is permanent (spec 003).
-- The list supports search, a status filter, a due-date range filter, sorting and paging. The list
-  state lives in the address, so a reload or a shared link shows the same list.
+- Tasks have a title, an optional description, a status (To do, In progress, Done) and an optional
+  due date. Unfinished tasks past their due date are marked **Overdue**.
+- The tasks screen is a **board** with one column per status, each with its count and "Load more"
+  (spec 004).
+- Opening a card shows its details in a **side panel** over the board; creating ("New task" or a
+  column's "+") and editing happen in the same panel. Each panel has its own address.
+- Deleting, from a card or the panel, asks for confirmation and is permanent (spec 003).
+- A filter bar offers search, a due-date range filter and sorting for every column. These values
+  live in the address, so a reload or a shared link shows the same board.
 - Another person's task always answers "Task not found".
 
 The due-date range filter allows at most **90 days** by default. Change it without a new release

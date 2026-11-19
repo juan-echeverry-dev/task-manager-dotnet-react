@@ -1,6 +1,9 @@
 # Contract: SPA routes and behavior for tasks
 
 > **Amended by [spec 003](../../003-permanent-task-deletion/spec.md)**: deletion is permanent; the deleted-tasks list and restore were removed.
+>
+> **Replaced by [spec 004](../../004-task-board/contracts/spa-routes.md) for the task screens**: the list and the
+> detail, create and edit pages became a board with a side panel.
 
 All routes below are protected by `RequireAuth` (feature 001).
 

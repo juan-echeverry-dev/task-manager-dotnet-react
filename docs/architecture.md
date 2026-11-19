@@ -124,18 +124,19 @@ Domain, Application or Api depend on Identity types. The only exception is the p
 configuration, which declares the foreign key from `Tasks.OwnerId` to `Users.Id`.
 
 **Ownership**: every repository query starts from the owner's tasks, so another person's task is
-indistinguishable from a missing one (the same 404 body). Editing a deleted task returns 409.
+indistinguishable from a missing one (the same 404 body). Deletion is permanent (spec 003); editing
+or deleting a task that no longer exists returns the same 404.
 
 List query flow:
 
 ```mermaid
 sequenceDiagram
-    participant SPA as TaskListPage (URL state)
+    participant SPA as Board column (useBoardColumn)
     participant C as TasksController
     participant V as ListTasksValidator
     participant H as ListTasksHandler
     participant R as TaskRepository
-    SPA->>C: GET /api/tasks?search=…&status=…&dueFrom=…&dueTo=…&sort=…&direction=…&page=…
+    SPA->>C: GET /api/tasks?status=…&pageSize=20&search=…&dueFrom=…&dueTo=…&sort=…&direction=…&page=…
     C->>H: ListTasksQuery (raw text values, owner from sub)
     H->>V: validate (range limit from TaskListOptions)
     V-->>H: errors keyed by parameter → 400
@@ -168,7 +169,8 @@ frontend/src/
 ```
 
 Server state is managed by TanStack Query; there is no global client store. The only client
-state shared across screens is the session (`features/auth/session`). The task lists keep their
-search, filters, sort and page in the address (`features/tasks/task-query.ts`), so reloading or
-sharing a link shows the same list. Any 401, from a query or a mutation, ends the session. See
+state shared across screens is the session (`features/auth/session`). The task board keeps its
+search, due-date range and sort in the address (`features/tasks/board-query.ts`), so reloading or
+sharing a link shows the same board; each column loads its own batches, and task details, create and
+edit open in a side panel routed under `/tasks` ([ADR 0012](adr/0012-task-board-routed-side-panel.md)). Any 401, from a query or a mutation, ends the session. See
 [ADR 0009](adr/0009-frontend-stack.md).
