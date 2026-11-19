@@ -114,7 +114,7 @@ on its own.
 - [X] T017 [P] [US1] Create the port in `src/TaskLane.Application/Tasks/Ports/ITaskRepository.cs`:
   - Methods `Task AddAsync(TaskItem, CancellationToken)` and `Task<PagedResult<TaskItem>> ListAsync(Guid ownerId, TaskListQuery query, CancellationToken)`.
   - `TaskListQuery` record (`Search`, `Status`, `DueFrom`, `DueTo`, `Sort`, `Direction`, `Page`, `PageSize`, `Deleted`) with `Default` = active, `dueDate` ascending, page 1, size 20.
-  - `TaskSortField` enum (`DueDate`, `CreatedAt`, `Title`, `DeletedAt`) and `SortDirection` enum.
+  - `TaskSortField` enum (`DueDate`, `CreatedAt`, `Title`, `DeletedAt`) and `TaskSortDirection` enum (prefixed to avoid clashing with `Shouldly.SortDirection` in tests).
 - [X] T018 [US1] Implement the CreateTask slice in `src/TaskLane.Application/Tasks/CreateTask/` (`CreateTaskCommand(Guid OwnerId, string Title, string? Description, string? Status, string? DueDate)`, `CreateTaskValidator`, `CreateTaskHandler`) until T012 and T013 pass. Register it in `src/TaskLane.Application/DependencyInjection.cs`.
 - [X] T019 [US1] Implement the ListTasks slice (paging and default order only) in `src/TaskLane.Application/Tasks/ListTasks/` (`ListTasksQuery(Guid OwnerId, bool Deleted, string? Search, string? Status, string? DueFrom, string? DueTo, string? Sort, string? Direction, int? Page, int? PageSize)`, `ListTasksValidator`, `ListTasksHandler` → `PagedResult<TaskResponse>`) until T014 passes. Register it in DI.
 - [X] T020 [US1] Implement `TaskRepository.AddAsync` and `ListAsync` (owner-scoped, `DeletedAt == null`, default order, `Skip`/`Take`, `CountAsync`) in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` and register it scoped in `src/TaskLane.Infrastructure/DependencyInjection.cs` until T015 passes.

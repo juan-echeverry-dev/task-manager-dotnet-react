@@ -49,16 +49,16 @@ public sealed class ListTasksHandlerTests
 
         await _tasks.Received(1).ListAsync(
             OwnerId,
-            TaskListQuery.Default with { Deleted = true, Sort = TaskSortField.DeletedAt, Direction = SortDirection.Descending },
+            TaskListQuery.Default with { Deleted = true, Sort = TaskSortField.DeletedAt, Direction = TaskSortDirection.Descending },
             Arg.Any<CancellationToken>());
     }
 
     [Theory]
-    [InlineData("dueDate", TaskSortField.DueDate, SortDirection.Ascending)]
-    [InlineData("title", TaskSortField.Title, SortDirection.Ascending)]
-    [InlineData("createdAt", TaskSortField.CreatedAt, SortDirection.Descending)]
-    [InlineData("deletedAt", TaskSortField.DeletedAt, SortDirection.Descending)]
-    public async Task SortWithoutDirection_UsesTheFieldsDefaultDirection(string sort, TaskSortField field, SortDirection direction)
+    [InlineData("dueDate", TaskSortField.DueDate, TaskSortDirection.Ascending)]
+    [InlineData("title", TaskSortField.Title, TaskSortDirection.Ascending)]
+    [InlineData("createdAt", TaskSortField.CreatedAt, TaskSortDirection.Descending)]
+    [InlineData("deletedAt", TaskSortField.DeletedAt, TaskSortDirection.Descending)]
+    public async Task SortWithoutDirection_UsesTheFieldsDefaultDirection(string sort, TaskSortField field, TaskSortDirection direction)
     {
         await _handler.HandleAsync(Active() with { Deleted = true, Sort = sort }, TestContext.Current.CancellationToken);
 

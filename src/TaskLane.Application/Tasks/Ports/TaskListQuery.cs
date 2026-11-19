@@ -13,7 +13,7 @@ public sealed record TaskListQuery(
     DateOnly? DueFrom,
     DateOnly? DueTo,
     TaskSortField Sort,
-    SortDirection Direction,
+    TaskSortDirection Direction,
     int Page,
     int PageSize)
 {
@@ -27,7 +27,7 @@ public sealed record TaskListQuery(
         DueFrom: null,
         DueTo: null,
         TaskSortField.DueDate,
-        SortDirection.Ascending,
+        TaskSortDirection.Ascending,
         Page: 1,
         DefaultPageSize);
 }
@@ -40,7 +40,7 @@ public enum TaskSortField
     DeletedAt,
 }
 
-public enum SortDirection
+public enum TaskSortDirection
 {
     Ascending,
     Descending,

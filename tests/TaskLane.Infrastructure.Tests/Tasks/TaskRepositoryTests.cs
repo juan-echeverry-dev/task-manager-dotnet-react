@@ -17,7 +17,7 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
     private Guid _otherOwner;
 
     private static readonly TaskListQuery DeletedDefault =
-        TaskListQuery.Default with { Deleted = true, Sort = TaskSortField.DeletedAt, Direction = SortDirection.Descending };
+        TaskListQuery.Default with { Deleted = true, Sort = TaskSortField.DeletedAt, Direction = TaskSortDirection.Descending };
 
     private static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
