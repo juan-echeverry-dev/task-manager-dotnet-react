@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 using TaskLane.Api.Common;
 using TaskLane.Application.Tasks;
@@ -24,24 +25,29 @@ public sealed class TasksController : ControllerBase
     [ProducesResponseType<PagedResult<TaskResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
     public Task<IActionResult> List(
-        [FromQuery] string? sort,
-        [FromQuery] int? page,
-        [FromQuery] int? pageSize,
+        [FromQuery] TaskListRequest request,
         [FromServices] ListTasksHandler handler,
         CancellationToken cancellationToken) =>
-        ListAsync(deleted: false, sort, page, pageSize, handler, cancellationToken);
+        ListAsync(deleted: false, request, handler, cancellationToken);
 
-    // Declared before "{id:guid}" for readability; the guid constraint already keeps the routes apart.
+    // "deleted" and "settings" are declared before "{id:guid}"; the guid constraint also keeps them apart.
     [HttpGet("deleted")]
     [ProducesResponseType<PagedResult<TaskResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
     public Task<IActionResult> ListDeleted(
-        [FromQuery] string? sort,
-        [FromQuery] int? page,
-        [FromQuery] int? pageSize,
+        [FromQuery] TaskListRequest request,
         [FromServices] ListTasksHandler handler,
         CancellationToken cancellationToken) =>
-        ListAsync(deleted: true, sort, page, pageSize, handler, cancellationToken);
+        ListAsync(deleted: true, request, handler, cancellationToken);
+
+    [HttpGet("settings")]
+    [ProducesResponseType<TaskSettingsResponse>(StatusCodes.Status200OK)]
+    public IActionResult GetSettings([FromServices] IOptions<TaskListOptions> options)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        return Ok(new TaskSettingsResponse(options.Value.DueDateRangeMaxDays));
+    }
 
     [HttpPost]
     [ProducesResponseType<TaskResponse>(StatusCodes.Status201Created)]
@@ -154,12 +160,11 @@ public sealed class TasksController : ControllerBase
 
     private async Task<IActionResult> ListAsync(
         bool deleted,
-        string? sort,
-        int? page,
-        int? pageSize,
+        TaskListRequest request,
         ListTasksHandler handler,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(handler);
 
         if (User.GetUserId() is not { } ownerId)
@@ -168,7 +173,17 @@ public sealed class TasksController : ControllerBase
         }
 
         var result = await handler.HandleAsync(
-            new ListTasksQuery(ownerId, deleted, null, null, null, null, sort, null, page, pageSize),
+            new ListTasksQuery(
+                ownerId,
+                deleted,
+                request.Search,
+                request.Status,
+                request.DueFrom,
+                request.DueTo,
+                request.Sort,
+                request.Direction,
+                request.Page,
+                request.PageSize),
             cancellationToken);
 
         return result.ToActionResult(Ok);
