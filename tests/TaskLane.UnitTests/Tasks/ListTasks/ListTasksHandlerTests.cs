@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Options;
+
 using NSubstitute;
 
 using TaskLane.Application.Common.Results;
@@ -19,7 +21,7 @@ public sealed class ListTasksHandlerTests
     {
         _tasks.ListAsync(Arg.Any<Guid>(), Arg.Any<TaskListQuery>(), Arg.Any<CancellationToken>())
             .Returns(new PagedResult<TaskItem>([], 1, 20, 0));
-        _handler = new ListTasksHandler(new ListTasksValidator(), _tasks);
+        _handler = new ListTasksHandler(new ListTasksValidator(Options.Create(new TaskListOptions())), _tasks);
     }
 
     private static ListTasksQuery Active() =>
@@ -66,6 +68,52 @@ public sealed class ListTasksHandlerTests
             OwnerId,
             TaskListQuery.Default with { Deleted = true, Sort = field, Direction = direction },
             Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task SearchFiltersSortAndDirection_AreParsedIntoTheRepositoryQuery()
+    {
+        await _handler.HandleAsync(
+            Active() with
+            {
+                Search = "  demo  ",
+                Status = "InProgress",
+                DueFrom = "2026-12-01",
+                DueTo = "2026-12-31",
+                Sort = "createdAt",
+                Direction = "asc",
+            },
+            TestContext.Current.CancellationToken);
+
+        await _tasks.Received(1).ListAsync(
+            OwnerId,
+            TaskListQuery.Default with
+            {
+                Search = "demo",
+                Status = TaskItemStatus.InProgress,
+                DueFrom = new DateOnly(2026, 12, 1),
+                DueTo = new DateOnly(2026, 12, 31),
+                Sort = TaskSortField.CreatedAt,
+                Direction = TaskSortDirection.Ascending,
+            },
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task BlankSearch_IsIgnored()
+    {
+        await _handler.HandleAsync(Active() with { Search = "   " }, TestContext.Current.CancellationToken);
+
+        await _tasks.Received(1).ListAsync(OwnerId, TaskListQuery.Default, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DirectionWithoutSort_AppliesToTheDefaultField()
+    {
+        await _handler.HandleAsync(Active() with { Direction = "desc" }, TestContext.Current.CancellationToken);
+
+        await _tasks.Received(1).ListAsync(
+            OwnerId, TaskListQuery.Default with { Direction = TaskSortDirection.Descending }, Arg.Any<CancellationToken>());
     }
 
     [Fact]
