@@ -140,19 +140,18 @@ follow the spec's priorities:
 
 ### Tests for User Story 2 (write first, must fail)
 
-- [ ] T012 [P] [US2] Create `features/tasks/TaskPanel.test.tsx`:
+- [X] T012 [P] [US2] Create `features/tasks/TaskPanel.test.tsx`:
   - `/tasks/abc?search=demo` renders the board (the column lists are present) and a dialog named "Prepare demo".
-  - Opened from a card: "Close" and Escape go back one history step. The address becomes `/tasks?search=demo` and a following Back does not reopen the panel (U1).
-  - Opened directly (reload or shared link): "Close" replaces the address with `/tasks?search=demo` and adds no history entry.
+  - "Close" and Escape replace the address with `/tasks?search=demo` (history action `REPLACE`), so a following Back does not reopen the panel (U1). This holds whether the panel was opened from a card or directly.
   - `router.navigate(-1)` after opening from the board closes the panel.
   - A task hidden by the current search still opens in the panel when its address is opened (G1).
   - Focus returns to the card link after closing.
   - `/tasks/missing` shows "Task not found" in the panel with a link back to the board.
-- [ ] T013 [P] [US2] Create `features/tasks/TaskDetailPanel.test.tsx` by moving the cases of `TaskDetailPage.test.tsx` onto `/tasks/abc`:
+- [X] T013 [P] [US2] Create `features/tasks/TaskDetailPanel.test.tsx` by moving the cases of `TaskDetailPage.test.tsx` onto `/tasks/abc`:
   - Every detail, the placeholders and "Edit" pointing to `/tasks/abc/edit` with the query string.
   - The status message, the 404 and the load failure.
   - The delete flow from the panel: confirmation, the panel closes, the board shows "Task deleted.", plus the 404 alert, the pending state and the failure message.
-- [ ] T014 [P] [US2] Create `features/tasks/EditTaskPanel.test.tsx` by moving the cases of `EditTaskPage.test.tsx` onto `/tasks/abc/edit`:
+- [X] T014 [P] [US2] Create `features/tasks/EditTaskPanel.test.tsx` by moving the cases of `EditTaskPage.test.tsx` onto `/tasks/abc/edit`:
   - The form opens inside the dialog named "Edit task".
   - Saving shows the details with "Task updated.", and the card moves to the column of its new status.
   - Validation and server errors, and the 404 alert, which goes to `/tasks` with "This task no longer exists.".
@@ -160,26 +159,24 @@ follow the spec's priorities:
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Create `features/tasks/TaskPanel.tsx`, a layout route (research R4):
+- [X] T015 [US2] Create `features/tasks/TaskPanel.tsx`, a layout route (research R4):
   - A native `<dialog>` opened with `showModal()` on mount, with `aria-labelledby` set to a `useId()` passed to the content via `<Outlet context={{ titleId }} />`.
   - Classes: right-aligned full height `sm:w-[32rem]`, full screen below `sm`, `backdrop:bg-slate-900/20`.
-  - A "Close" button. Close and the `cancel` event (Escape, with `preventDefault`) share one `close()`:
-    - When `location.state?.fromBoard` is true (the panel was opened from a card, "New task" or "+"), it goes back one step with `navigate(-1)`.
-    - Otherwise it calls `navigate(boardHref('/tasks', boardSearchFrom(location.search)), { replace: true })`.
-  - Links that open the panel from the board pass `state={{ fromBoard: true }}`: the card title in T007, "New task" in T009, "+" in T022, and "Edit" in T017, whose link keeps the flag it received.
+  - A "Close" button. Close and the `cancel` event (Escape, with `preventDefault`) call `navigate(boardHref('/tasks', boardSearchFrom(location.search)), { replace: true })`.
+  - Saving, cancelling, and deleting from the panel also navigate with `replace`, so Back never returns to a closed panel or a submitted form. This is simpler than the `fromBoard` flag first proposed for U1, which would have sent Back from the details to the edit form after a save.
   - On unmount, focus returns to the element that was active when it opened if it is still connected, otherwise to the board `<h1>`.
-- [ ] T016 [US2] Create `features/tasks/DeleteTaskButton.tsx` by extracting `DeleteAction` from `TaskDetailPage.tsx` (research R9):
+- [X] T016 [US2] Create `features/tasks/DeleteTaskButton.tsx` by extracting `DeleteAction` from `TaskDetailPage.tsx` (research R9):
   - Props: the task, `accessToken`, `onFailed` and an optional `label` for the accessible name.
   - On success or `404`, it invalidates `['tasks']` and navigates to `boardHref('/tasks', boardSearchFrom(location.search))` with `{ status: taskMessages.deleted }` or `{ alert: taskMessages.noLongerExists }`.
-- [ ] T017 [US2] Create `features/tasks/TaskDetailPanel.tsx` from `TaskDetailPage.tsx`:
+- [X] T017 [US2] Create `features/tasks/TaskDetailPanel.tsx` from `TaskDetailPage.tsx`:
   - It renders the `<h2 id={titleId}>` title, `StatusMessage`, the detail list, "Edit" (`boardHref('/tasks/<id>/edit', search)`) and `DeleteTaskButton`.
   - It drops the "Back to tasks" link, because the panel has Close.
   - Delete `TaskDetailPage.tsx` and `TaskDetailPage.test.tsx`. T013 passes.
-- [ ] T018 [US2] Create `features/tasks/EditTaskPanel.tsx` from `EditTaskPage.tsx`:
+- [X] T018 [US2] Create `features/tasks/EditTaskPanel.tsx` from `EditTaskPage.tsx`:
   - The `<h2 id={titleId}>Edit task</h2>`, then `TaskForm` plus a "Cancel" link back to the details.
   - Navigation keeps the query string.
   - Delete `EditTaskPage.tsx` and `EditTaskPage.test.tsx`. T014 passes.
-- [ ] T019 [US2] In `app/routes.tsx`, nest the panel under `/tasks`: `{ path: 'tasks', element: <TaskBoardPage />, children: [{ element: <TaskPanel />, children: [{ path: ':id', … }, { path: ':id/edit', … }] }] }`. Keep `tasks/new` as a sibling until US3. T012 passes. Update `app/routes.test.tsx` (`/tasks/deleted` shows "Task not found" inside the panel)
+- [X] T019 [US2] In `app/routes.tsx`, nest the panel under `/tasks`: `{ path: 'tasks', element: <TaskBoardPage />, children: [{ element: <TaskPanel />, children: [{ path: ':id', … }, { path: ':id/edit', … }] }] }`. Keep `tasks/new` as a sibling until US3. T012 passes. Update `app/routes.test.tsx` (`/tasks/deleted` shows "Task not found" inside the panel)
 
 **Checkpoint**: Details and edit live in the panel; create still uses its page.
 

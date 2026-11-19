@@ -55,10 +55,9 @@ action keep it.
 - `aria-labelledby` the content heading: the task title, "New task" or "Edit task".
 - A close button labelled "Close" at the top right. Close, Escape and browser Back go to `/tasks` +
   board query string; focus returns to the element that opened the panel when it is still on the page.
-  - Opened from the board (card, "New task", "+", carried through "Edit"): Close and Escape go back one
-    history entry, so Back afterwards does not reopen the panel.
-  - Opened from its address (reload, shared link): Close and Escape replace the address with `/tasks` +
-    board query string.
+  - Close and Escape replace the panel's address with `/tasks` + board query string; saving, cancelling
+    and deleting from the panel also replace the address. Back afterwards never reopens the panel or
+    returns to a submitted form.
   - The board query string is rebuilt from the board values only; the create form's `status` preset
     never reaches the board address.
 - Content:

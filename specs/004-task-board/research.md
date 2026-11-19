@@ -44,9 +44,9 @@ library).
 - **Decision**: A `TaskPanel` layout route renders a native `<dialog>` opened with `showModal()`,
   positioned at the right edge (full screen under the `sm` breakpoint), with a light backdrop so the
   board stays visible. It has a visible close button; the dialog's `cancel` event (Escape) and the close
-  button share one action: when the panel was opened from the board (navigation state `fromBoard`) it
-  goes back one history entry, otherwise it replaces the address with `/tasks` and the board query
-  string, so Back never reopens a closed panel. The content (detail, create, edit)
+  button share one action that replaces the address with `/tasks` and the board query string; saves,
+  cancels and deletes in the panel also replace. Back never reopens a closed panel. (A `fromBoard` flag
+  with `navigate(-1)` was considered and rejected: after Edit → Save, going back would show the form.) The content (detail, create, edit)
   receives the id for `aria-labelledby` through the outlet context and renders the heading.
   On close, focus returns to the element that opened it when it is still on the page, otherwise to the
   board heading.
