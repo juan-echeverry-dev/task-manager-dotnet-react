@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router'
+import { ApiError } from '../../shared/api/http-client'
 import { Pagination } from '../../shared/ui/Pagination'
 import { useSession } from '../auth/session/useSession'
 import { OverdueBadge, StatusBadge } from './badges'
@@ -7,9 +8,17 @@ import { formatDate, formatTimestamp } from './format'
 import { taskMessages } from './messages'
 import { isOverdue, localToday } from './overdue'
 import { StatusMessage } from './StatusMessage'
-import { listDeletedTasks, listTasks, type Task } from './tasks-api'
-
-export type TaskListMode = 'active' | 'deleted'
+import { TaskFilters } from './TaskFilters'
+import {
+  hasFilters,
+  parseTaskQuery,
+  serializeTaskQuery,
+  toApiParams,
+  withChanges,
+  type TaskListMode,
+  type TaskQuery,
+} from './task-query'
+import { getTaskSettings, listDeletedTasks, listTasks, type Task } from './tasks-api'
 
 const MODES = {
   active: { title: 'Tasks', path: '/tasks', list: listTasks, empty: 'You have no tasks yet.' },
@@ -20,21 +29,34 @@ const secondaryLinkClass =
   'rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
 
 /**
- * Task list (spec US1, US3, FR-014, FR-016 to FR-019). The deleted list has the same tools and shows
- * when each task was deleted. Rendered only inside RequireAuth.
+ * Task list (spec US1, US3, US4). Search, filters, sort and page live in the address, so reloading or
+ * sharing it shows the same list. The deleted list has the same tools. Rendered only inside RequireAuth.
  */
 export function TaskListPage({ mode = 'active' }: { mode?: TaskListMode }) {
   const config = MODES[mode]
   const accessToken = useSession().session?.accessToken ?? ''
-  const [searchParams] = useSearchParams()
-  const page = parsePage(searchParams.get('page'))
-  const params = { page: page === 1 ? undefined : page }
+  const [searchParams, setSearchParams] = useSearchParams()
+  const query = parseTaskQuery(searchParams, mode)
+  const params = toApiParams(query, mode)
 
   const tasks = useQuery({
     queryKey: ['tasks', mode, params, accessToken],
     queryFn: () => config.list(params, accessToken),
     enabled: accessToken !== '',
   })
+  const settings = useQuery({
+    queryKey: ['tasks', 'settings', accessToken],
+    queryFn: () => getTaskSettings(accessToken),
+    enabled: accessToken !== '',
+    staleTime: Infinity,
+  })
+
+  const change = (changes: Partial<TaskQuery>) => setSearchParams(serializeTaskQuery(withChanges(query, changes), mode))
+  const hrefFor = (page: number) => {
+    const search = serializeTaskQuery({ ...query, page }, mode).toString()
+    return search ? `${config.path}?${search}` : config.path
+  }
+  const filtered = hasFilters(query)
   const today = localToday()
 
   return (
@@ -64,22 +86,39 @@ export function TaskListPage({ mode = 'active' }: { mode?: TaskListMode }) {
 
       <StatusMessage />
 
+      <TaskFilters query={query} mode={mode} maxRangeDays={settings.data?.dueDateRangeMaxDays} onChange={change} />
+
       {tasks.isPending ? <p className="text-slate-600">Loading tasks…</p> : null}
 
       {tasks.isError ? (
         <p role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-          {taskMessages.serviceUnavailable}
+          {listErrorMessage(tasks.error)}
         </p>
       ) : null}
 
       {tasks.data && tasks.data.totalCount === 0 ? (
         <div className="rounded-md border border-dashed border-slate-300 bg-white px-4 py-8 text-center">
-          <p className="text-slate-700">{config.empty}</p>
-          {mode === 'active' ? (
-            <Link to="/tasks/new" className="mt-2 inline-block font-medium text-sky-700 underline">
-              Create your first task
-            </Link>
-          ) : null}
+          {filtered ? (
+            <>
+              <p className="text-slate-700">No tasks match your search.</p>
+              <button
+                type="button"
+                onClick={() => change({ search: '', status: '', dueFrom: '', dueTo: '' })}
+                className="mt-2 font-medium text-sky-700 underline"
+              >
+                Clear search and filters
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-slate-700">{config.empty}</p>
+              {mode === 'active' ? (
+                <Link to="/tasks/new" className="mt-2 inline-block font-medium text-sky-700 underline">
+                  Create your first task
+                </Link>
+              ) : null}
+            </>
+          )}
         </div>
       ) : null}
 
@@ -88,16 +127,20 @@ export function TaskListPage({ mode = 'active' }: { mode?: TaskListMode }) {
           <p className="text-sm text-slate-600">
             {tasks.data.totalCount} {tasks.data.totalCount === 1 ? 'task' : 'tasks'}
           </p>
-          <ul aria-label={config.title} className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
-            {tasks.data.items.map((task) => (
-              <TaskRow key={task.id} task={task} today={today} />
-            ))}
-          </ul>
+          {tasks.data.items.length > 0 ? (
+            <ul aria-label={config.title} className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
+              {tasks.data.items.map((task) => (
+                <TaskRow key={task.id} task={task} today={today} />
+              ))}
+            </ul>
+          ) : (
+            <p className="text-slate-700">This page is empty.</p>
+          )}
           <Pagination
             page={tasks.data.page}
             pageSize={tasks.data.pageSize}
             totalCount={tasks.data.totalCount}
-            hrefFor={(number) => (number === 1 ? config.path : `${config.path}?page=${number}`)}
+            hrefFor={hrefFor}
           />
         </>
       ) : null}
@@ -127,7 +170,11 @@ function TaskRow({ task, today }: { task: Task; today: string }) {
   )
 }
 
-function parsePage(value: string | null): number {
-  const page = Number(value)
-  return Number.isInteger(page) && page >= 1 ? page : 1
+/** A refused query explains itself (for example a range longer than allowed); anything else is a service error. */
+function listErrorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.status === 400) {
+    const first = Object.values(error.problem?.errors ?? {})[0]?.[0]
+    if (first) return first
+  }
+  return taskMessages.serviceUnavailable
 }

@@ -9,6 +9,17 @@ const apiTarget = process.env.API_URL ?? 'http://localhost:5208'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rolldownOptions: {
+      output: {
+        // Third-party code changes rarely, so it gets its own long-lived chunk and keeps each chunk
+        // under the 500 kB warning limit.
+        codeSplitting: {
+          groups: [{ name: 'vendor', test: /node_modules/ }],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     strictPort: true,

@@ -33,6 +33,15 @@ export interface TaskInput {
 /** List query values, named as in the API; undefined values are left out of the request. */
 export type ListTasksParams = Record<string, string | number | undefined>
 
+/** Settings the screens need (contracts/tasks-api.md). */
+export interface TaskSettings {
+  dueDateRangeMaxDays: number
+}
+
+export function getTaskSettings(accessToken: string): Promise<TaskSettings> {
+  return request<TaskSettings>('/api/tasks/settings', {}, { accessToken })
+}
+
 export function createTask(input: TaskInput, accessToken: string): Promise<Task> {
   return request<Task>(
     '/api/tasks',
