@@ -18,6 +18,7 @@
     <PackageVersion Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="$(DotNetPackagesVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Identity.Core" Version="$(DotNetPackagesVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="$(DotNetPackagesVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="$(DotNetPackagesVersion)" />
     <!-- Aligned with the minimum Microsoft.IdentityModel version required by JwtBearer 10.0.x. -->
     <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.2" />
     <PackageVersion Include="Scalar.AspNetCore" Version="3.0.1" />
