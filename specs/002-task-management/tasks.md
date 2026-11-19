@@ -330,7 +330,7 @@ on its own.
   - `npm run check`.
 
   Fix any failure.
-- [ ] T054 Run the manual API checks from `specs/002-task-management/quickstart.md` §2 (including the restart with `Tasks__DueDateRangeMaxDays=30` and the demo-task idempotency check) and record the results.
+- [X] T054 Run the manual API checks from `specs/002-task-management/quickstart.md` §2 (including the restart with `Tasks__DueDateRangeMaxDays=30` and the demo-task idempotency check) and record the results.
 - [ ] T055 Run the manual SPA check from `specs/002-task-management/quickstart.md` §3 (360 px width, keyboard only, clean console). The user performs the browser part, and the results, including the approximate time to create a task and see it in the list (SC-001), are recorded in the PR description.
 
 ---
