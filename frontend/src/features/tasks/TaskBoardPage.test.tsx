@@ -195,6 +195,25 @@ describe('TaskBoardPage', () => {
     expect(await screen.findByRole('link', { name: 'New task' })).toHaveAttribute('href', '/tasks/new?search=demo')
   })
 
+  it('offers a "+" in each column header to create a task in that status, keeping the board query string', async () => {
+    stubBoard({ ToDo: tasksOf('ToDo', 1) })
+    renderApp('/tasks?search=demo')
+
+    await screen.findByRole('list', { name: 'To do' })
+    expect(within(column('To do')).getByRole('link', { name: 'New task in To do' })).toHaveAttribute(
+      'href',
+      '/tasks/new?status=ToDo&search=demo',
+    )
+    expect(within(column('In progress')).getByRole('link', { name: 'New task in In progress' })).toHaveAttribute(
+      'href',
+      '/tasks/new?status=InProgress&search=demo',
+    )
+    expect(within(column('Done')).getByRole('link', { name: 'New task in Done' })).toHaveAttribute(
+      'href',
+      '/tasks/new?status=Done&search=demo',
+    )
+  })
+
   it('shows the status message passed by the previous screen', async () => {
     stubBoard({ ToDo: tasksOf('ToDo', 1) })
     const { router } = renderApp('/profile')
