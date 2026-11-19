@@ -1,0 +1,71 @@
+using Microsoft.AspNetCore.Mvc;
+
+using TaskLane.Api.Common;
+using TaskLane.Application.Tasks;
+using TaskLane.Application.Tasks.CreateTask;
+using TaskLane.Application.Tasks.ListTasks;
+
+namespace TaskLane.Api.Tasks;
+
+/// <summary>
+/// Task endpoints (contracts/tasks-api.md). Authentication is required by the fallback policy, and the
+/// owner is always the signed-in person.
+/// </summary>
+[ApiController]
+[Route("api/tasks")]
+[ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized, "application/problem+json")]
+public sealed class TasksController : ControllerBase
+{
+    [HttpGet]
+    [ProducesResponseType<PagedResult<TaskResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    public async Task<IActionResult> List(
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize,
+        [FromServices] ListTasksHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        if (User.GetUserId() is not { } ownerId)
+        {
+            return InvalidSession();
+        }
+
+        var result = await handler.HandleAsync(
+            new ListTasksQuery(ownerId, Deleted: false, null, null, null, null, null, null, page, pageSize),
+            cancellationToken);
+
+        return result.ToActionResult(Ok);
+    }
+
+    [HttpPost]
+    [ProducesResponseType<TaskResponse>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    public async Task<IActionResult> Create(
+        CreateTaskRequest request,
+        [FromServices] CreateTaskHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(handler);
+
+        if (User.GetUserId() is not { } ownerId)
+        {
+            return InvalidSession();
+        }
+
+        var result = await handler.HandleAsync(
+            new CreateTaskCommand(ownerId, request.Title ?? string.Empty, request.Description, request.Status, request.DueDate),
+            cancellationToken);
+
+        return result.ToActionResult(task => Created($"/api/tasks/{task.Id}", task));
+    }
+
+    // The token is validated by then; a subject that is not a user id is still not a session.
+    private ObjectResult InvalidSession() =>
+        Problem(
+            title: "Authentication required",
+            detail: "Your session is no longer valid. Please sign in again.",
+            statusCode: StatusCodes.Status401Unauthorized);
+}
