@@ -323,7 +323,7 @@ on its own.
 - [X] T050 Implement `DemoTasksSeeder` in `src/TaskLane.Infrastructure/Tasks/DemoTasksSeeder.cs` with a `SeedDemoTasksAsync()` extension, and call it after `SeedDemoAccountAsync()` in the Development block of `src/TaskLane.Api/Program.cs`. T049 must then pass.
 - [X] T051 [P] Update `docs/architecture.md` (Tasks module table, module-boundary rule, list-query flow), `README.md` (tasks, demo tasks, and the `Tasks__DueDateRangeMaxDays` setting) and the "Where things go" examples in `CLAUDE.md` if needed.
 - [X] T052 [P] Add sample requests for the eight task endpoints to `src/TaskLane.Api/TaskLane.Api.http`.
-- [ ] T053 Run the automated gates from `specs/002-task-management/quickstart.md` §1:
+- [X] T053 Run the automated gates from `specs/002-task-management/quickstart.md` §1:
   - `dotnet build` (0 warnings).
   - `dotnet format --verify-no-changes`.
   - `./scripts/test-coverage.ps1` (≥ 90 % Domain + Application, ≥ 80 % overall).
