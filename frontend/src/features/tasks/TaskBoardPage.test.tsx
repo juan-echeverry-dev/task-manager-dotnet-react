@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { jsonResponse, problemResponse, stubFetch } from '../../test/fetch'
 import { renderApp } from '../../test/render'
 import { signedIn } from '../../test/session'
+import { requestsWith, stubTasksApi } from './fake-tasks-api'
 import type { Task, TaskStatus } from './tasks-api'
 import { aPage, aTask } from './test-data'
 
@@ -275,6 +276,90 @@ describe('TaskBoardPage', () => {
 
       expect(router.state.location.search).toBe('?sort=title')
       await waitFor(() => expect(router.state.location.search).toBe('?search=demo&sort=title'), { timeout: 2000 })
+    })
+  })
+
+  describe('deleting from a card', () => {
+    const tasks = () => [
+      aTask({ id: 'a', title: 'Prepare demo', status: 'ToDo' }),
+      aTask({ id: 'b', title: 'Write notes', status: 'ToDo' }),
+    ]
+
+    async function openConfirmation(path = '/tasks?search=e') {
+      const user = userEvent.setup()
+      const result = renderApp(path)
+      const list = await screen.findByRole('list', { name: 'To do' })
+      await user.click(await within(list).findByRole('button', { name: 'Delete Prepare demo' }))
+      return { ...result, user, confirmation: screen.getByRole('dialog', { name: 'Delete task' }) }
+    }
+
+    it('offers a delete action on each card, named after the task', async () => {
+      stubTasksApi(tasks())
+      renderApp('/tasks')
+
+      const list = await screen.findByRole('list', { name: 'To do' })
+      expect(await within(list).findByRole('button', { name: 'Delete Prepare demo' })).toBeInTheDocument()
+      expect(within(list).getByRole('button', { name: 'Delete Write notes' })).toBeInTheDocument()
+    })
+
+    it('asks for the permanent-deletion confirmation without opening the panel', async () => {
+      const { fetchMock } = stubTasksApi(tasks())
+      const { confirmation, router } = await openConfirmation()
+
+      expect(confirmation).toHaveAccessibleDescription("Delete this task permanently? This can't be undone.")
+      expect(router.state.location.pathname).toBe('/tasks')
+      expect(screen.queryByRole('dialog', { name: 'Prepare demo' })).not.toBeInTheDocument()
+      expect(requestsWith(fetchMock, 'DELETE')).toHaveLength(0)
+    })
+
+    it('deletes on confirm: the card disappears, the count goes down and the board confirms it', async () => {
+      const { fetchMock } = stubTasksApi(tasks())
+      const { user, confirmation, router } = await openConfirmation()
+      expect(within(column('To do')).getByText('2 tasks')).toBeInTheDocument()
+
+      await user.click(within(confirmation).getByRole('button', { name: 'Delete' }))
+
+      expect(await screen.findByText('Task deleted.')).toHaveAttribute('role', 'status')
+      await waitFor(() => expect(within(column('To do')).getByText('1 task')).toBeInTheDocument())
+      expect(within(screen.getByRole('list', { name: 'To do' })).queryByText('Prepare demo')).not.toBeInTheDocument()
+      expect(router.state.location.pathname).toBe('/tasks')
+      expect(router.state.location.search).toBe('?search=e')
+      expect(String(requestsWith(fetchMock, 'DELETE')[0]?.[0])).toBe('/api/tasks/a')
+    })
+
+    it('changes nothing when cancelled', async () => {
+      const { fetchMock } = stubTasksApi(tasks())
+      const { user } = await openConfirmation()
+
+      await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      expect(screen.queryByRole('dialog', { name: 'Delete task' })).not.toBeInTheDocument()
+      expect(within(screen.getByRole('list', { name: 'To do' })).getByText('Prepare demo')).toBeInTheDocument()
+      expect(requestsWith(fetchMock, 'DELETE')).toHaveLength(0)
+    })
+
+    it('says the task no longer exists when it was deleted elsewhere', async () => {
+      stubTasksApi(tasks(), (_url, init) =>
+        init?.method === 'DELETE' ? problemResponse(404, { title: 'Task not found', detail: 'The task does not exist.' }) : undefined,
+      )
+      const { user, confirmation } = await openConfirmation()
+
+      await user.click(within(confirmation).getByRole('button', { name: 'Delete' }))
+
+      expect(await screen.findByText('This task no longer exists.')).toHaveAttribute('role', 'alert')
+    })
+
+    it('shows the service message on the card when deleting fails, and keeps the task', async () => {
+      stubTasksApi(tasks(), (_url, init) =>
+        init?.method === 'DELETE' ? (Promise.reject(new TypeError('Failed to fetch')) as unknown as Response) : undefined,
+      )
+      const { user, confirmation } = await openConfirmation()
+
+      await user.click(within(confirmation).getByRole('button', { name: 'Delete' }))
+
+      const card = within(screen.getByRole('list', { name: 'To do' })).getAllByRole('listitem')[0] as HTMLElement
+      expect(await within(card).findByRole('alert')).toHaveTextContent("We couldn't reach the service. Please try again.")
+      expect(within(card).getByText('Prepare demo')).toBeInTheDocument()
     })
   })
 })
