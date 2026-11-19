@@ -223,7 +223,7 @@ follow the spec's priorities:
 
 ### Tests for User Story 4 (write first, must fail)
 
-- [ ] T023 [US4] Extend `features/tasks/TaskBoardPage.test.tsx`:
+- [X] T023 [US4] Extend `features/tasks/TaskBoardPage.test.tsx`:
   - Each card has a "Delete <title>" button.
   - The confirmation is "Delete this task permanently? This can't be undone." and no panel opens.
   - Confirm sends `DELETE /api/tasks/<id>`, refetches the columns, shows "Task deleted." and stays on `/tasks` with the query string.
@@ -232,7 +232,7 @@ follow the spec's priorities:
 
 ### Implementation for User Story 4
 
-- [ ] T024 [US4] Add `DeleteTaskButton` to `features/tasks/TaskCard.tsx` (small secondary text button, accessible name "Delete <title>"); on failure show the service message in the card (T023 passes)
+- [X] T024 [US4] Add `DeleteTaskButton` to `features/tasks/TaskCard.tsx` (small secondary text button, accessible name "Delete <title>"); on failure show the service message in the card (T023 passes)
 
 **Checkpoint**: Deletion is available from the card and the panel.
 
