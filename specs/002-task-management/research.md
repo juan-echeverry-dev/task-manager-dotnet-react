@@ -91,7 +91,8 @@ no `NEEDS CLARIFICATION` items remain. These decisions settle the design details
 
 - **Decision**:
   - **Sort fields:** `dueDate`, `createdAt` and `title` for both lists, plus `deletedAt` for the
-    deleted list only. Direction is `asc` or `desc`.
+    deleted list only. Direction is `asc` or `desc`. Without `direction`, each field uses its natural default:
+    `dueDate` asc, `title` asc, `createdAt` desc (newest first) and `deletedAt` desc.
   - **Defaults:**
     - Active list: `dueDate asc`. Tasks without a due date always come last whatever the
       direction; ties are broken by `createdAt desc`.

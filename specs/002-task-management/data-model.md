@@ -75,7 +75,7 @@ Field names in errors follow the JSON bodies and query strings: `title`, `descri
 | List | `status` | Optional; one of the names | "Status must be one of: ToDo, InProgress, Done." |
 | List | `dueFrom`, `dueTo` | Both or neither; valid `yyyy-MM-dd`; `dueFrom ≤ dueTo`; span ≤ configured maximum (default 90 days) | "Choose both a start and an end date." / "Enter dates as YYYY-MM-DD." / "The start date must be on or before the end date." / "Choose a range of at most {N} days." |
 | List | `sort` | Active list: `dueDate`, `createdAt`, `title`. Deleted list: those plus `deletedAt` | "Sort must be one of: …" |
-| List | `direction` | `asc` or `desc` | "Direction must be asc or desc." |
+| List | `direction` | `asc` or `desc`; when missing, the sort field's default: `dueDate` asc, `title` asc, `createdAt` desc, `deletedAt` desc | "Direction must be asc or desc." |
 | List | `page` | ≥ 1 | "Page must be 1 or greater." |
 | List | `pageSize` | 1–100 | "Page size must be between 1 and 100." |
 
@@ -84,7 +84,7 @@ more day is rejected.
 
 ## Shared types
 
-- `PagedResult<T>` (Application/Common/Paging): `Items`, `Page`, `PageSize`, `TotalCount`.
+- `PagedResult<T>` (Application/Tasks): `Items`, `Page`, `PageSize`, `TotalCount`.
 - `TaskResponse` (Application/Tasks): `Id`, `Title`, `Description`, `Status`, `DueDate`,
   `CreatedAt`, `UpdatedAt`, `DeletedAt`. It never contains `OwnerId`, which is implied by the
   session.

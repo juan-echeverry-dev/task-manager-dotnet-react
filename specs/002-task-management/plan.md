@@ -67,11 +67,11 @@ indexed.
 | II. Test-First | Each behavior starts with a failing test; injected clock; real SQLite | ✅ | ✅ Test layers per slice in [quickstart.md](quickstart.md) |
 | III. Dependency rule | Application has no EF Core or ASP.NET Core references | ✅ | ✅ Search, paging and ordering are expressed as an Application query object; EF translation lives in Infrastructure |
 | IV. Vertical slices and module boundaries | Slices per use case; Tasks does not reach into Identity internals | ✅ | ✅ Tasks refers to people only through the owner id (`sub`). The one cross-module reference (the FK configuration) is in Infrastructure persistence and is exempted explicitly in the new architecture test |
-| V. Simplicity | No generic repository, UoW or mediator; interfaces only at ports | ✅ | ✅ One port (`ITaskRepository`) with intention-revealing methods. The shared `PagedResult<T>` is introduced because two lists use it now |
+| V. Simplicity | No generic repository, UoW or mediator; interfaces only at ports | ✅ | ✅ One port (`ITaskRepository`) with intention-revealing methods. `PagedResult<T>` lives in the Tasks module, its only consumer. One justified deviation from the rule of three (`TaskFieldRules`) is recorded in Complexity Tracking |
 | VI. Security | Authentication by default; ownership enforced; input validated; Problem Details | ✅ | ✅ Every query is filtered by owner, and foreign tasks return 404 like missing ones (SC-002) |
 | VII. Quality | Warnings as errors, analyzers, oxlint with zero warnings, English | ✅ | ✅ |
 
-No violations; Complexity Tracking is empty.
+One justified deviation (principle IV, rule of three); see Complexity Tracking.
 
 ## Project Structure
 
@@ -101,9 +101,10 @@ src/
 │       ├── TaskItem.cs                       # entity: create, update, delete, restore, invariants
 │       └── TaskItemStatus.cs                 # ToDo, InProgress, Done
 ├── TaskLane.Application/
-│   ├── Common/Paging/PagedResult.cs          # items + page + pageSize + totalCount
 │   └── Tasks/
 │       ├── Ports/ITaskRepository.cs          # + TaskListQuery, TaskSortField
+│       ├── PagedResult.cs                    # items + page + pageSize + totalCount
+│       ├── TaskFieldRules.cs                 # title, description, due-date rules shared by create and update
 │       ├── TaskListOptions.cs                # configurable max due-date range (default 90)
 │       ├── TaskResponse.cs                   # shared read model of one task
 │       ├── CreateTask/                       # command, validator, handler
@@ -153,4 +154,6 @@ named `TaskItem` to avoid clashing with `System.Threading.Tasks.Task`
 
 ## Complexity Tracking
 
-No constitution violations to justify.
+| Deviation | Why needed | Simpler alternative rejected because |
+|---|---|---|
+| `TaskFieldRules` shared by the Create and Update validators (2 uses; principle IV asks for 3) | Title, description and due-date rules and messages must be identical on create and edit (FR-008, SC-005) | Duplicating the rules in each validator: changing one would make create and edit messages differ without any test failing |

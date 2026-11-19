@@ -73,8 +73,8 @@ on its own.
   - Expose `DbSet<TaskItem> Tasks` in `src/TaskLane.Infrastructure/Persistence/AppDbContext.cs`.
 - [ ] T007 [P] Write failing unit tests in `tests/TaskLane.Api.Tests/ClaimsPrincipalExtensionsTests.cs`: `GetUserId()` returns the Guid in the `sub` claim, and returns `null` when the claim is missing or is not a Guid.
 - [ ] T008 Implement `ClaimsPrincipalExtensions.GetUserId()` in `src/TaskLane.Api/Common/ClaimsPrincipalExtensions.cs` until T007 passes. Then make it a `refactor:` step: `src/TaskLane.Api/Identity/UsersController.cs` uses it, and all feature 001 tests stay green.
-- [ ] T009 [P] Add a module-boundary rule to `tests/TaskLane.ArchitectureTests/ModuleBoundaryTests.cs`: types in namespaces `TaskLane.Domain.Tasks*`, `TaskLane.Application.Tasks*` and `TaskLane.Api.Tasks*` must not depend on types in `TaskLane.*.Identity*`. Infrastructure persistence configuration is exempt (research R11). Run it; it must pass, and it must fail during a temporary local experiment that references `User` from `TaskItem`, which you then revert.
-- [ ] T010 [P] Add the shared types `PagedResult<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount)` in `src/TaskLane.Application/Common/Paging/PagedResult.cs` and `TaskResponse(Guid Id, string Title, string? Description, TaskItemStatus Status, DateOnly? DueDate, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, DateTimeOffset? DeletedAt)` with a static `From(TaskItem)` in `src/TaskLane.Application/Tasks/TaskResponse.cs`. Cover `From` with one unit test in `tests/TaskLane.UnitTests/Tasks/TaskResponseTests.cs`, written first.
+- [ ] T009 [P] Create `tests/TaskLane.ArchitectureTests/ModuleBoundaryTests.cs` with a module-boundary rule: types in namespaces `TaskLane.Domain.Tasks*`, `TaskLane.Application.Tasks*` and `TaskLane.Api.Tasks*` must not depend on types in `TaskLane.*.Identity*`. Infrastructure persistence configuration is exempt (research R11). Run it; it must pass, and it must fail during a temporary local experiment that references `User` from `TaskItem`, which you then revert.
+- [ ] T010 [P] Add the shared types `PagedResult<T>(IReadOnlyList<T> Items, int Page, int PageSize, int TotalCount)` in `src/TaskLane.Application/Tasks/PagedResult.cs` and `TaskResponse(Guid Id, string Title, string? Description, TaskItemStatus Status, DateOnly? DueDate, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, DateTimeOffset? DeletedAt)` with a static `From(TaskItem)` in `src/TaskLane.Application/Tasks/TaskResponse.cs`. Cover `From` with one unit test in `tests/TaskLane.UnitTests/Tasks/TaskResponseTests.cs`, written first.
 - [ ] T011 Configure JSON so `TaskItemStatus` serializes as a string (`JsonStringEnumConverter`) and `DateOnly` as `yyyy-MM-dd`: add `.AddJsonOptions(...)` in `src/TaskLane.Api/Program.cs`. Then run `dotnet test --solution TaskLane.slnx`: everything must be green.
 
 **Checkpoint**: The `Tasks` table exists, owner ids are read from one helper, and the module boundary is enforced.
@@ -178,7 +178,7 @@ on its own.
 ### Implementation for User Story 2
 
 - [ ] T027 [P] [US2] Add `Task<TaskItem?> GetOwnedAsync(Guid id, Guid ownerId, CancellationToken)` (tracked) and `Task UpdateAsync(TaskItem, CancellationToken)` to `src/TaskLane.Application/Tasks/Ports/ITaskRepository.cs` and implement them in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T025 passes.
-- [ ] T028 [US2] Implement `src/TaskLane.Application/Tasks/GetTask/` (`GetTaskQuery(Guid OwnerId, Guid TaskId)`, `GetTaskHandler`) and `src/TaskLane.Application/Tasks/UpdateTask/` (`UpdateTaskCommand(Guid OwnerId, Guid TaskId, string Title, string? Description, string? Status, string? DueDate)`, `UpdateTaskValidator`, `UpdateTaskHandler`) until T024 passes. Share the title, description and due-date rules with create through `src/TaskLane.Application/Tasks/TaskFieldRules.cs`, the first shared use. Register both in DI.
+- [ ] T028 [US2] Implement `src/TaskLane.Application/Tasks/GetTask/` (`GetTaskQuery(Guid OwnerId, Guid TaskId)`, `GetTaskHandler`) and `src/TaskLane.Application/Tasks/UpdateTask/` (`UpdateTaskCommand(Guid OwnerId, Guid TaskId, string Title, string? Description, string? Status, string? DueDate)`, `UpdateTaskValidator`, `UpdateTaskHandler`) until T024 passes. Share the title, description and due-date rules with create through `src/TaskLane.Application/Tasks/TaskFieldRules.cs` (a deviation from the rule of three, justified in plan.md Complexity Tracking). Register both in DI.
 - [ ] T029 [US2] Add `GET /api/tasks/{id:guid}` and `PUT /api/tasks/{id:guid}` (`UpdateTaskRequest` in `src/TaskLane.Api/Tasks/UpdateTaskRequest.cs`) to `src/TaskLane.Api/Tasks/TasksController.cs` until T026 passes.
 - [ ] T030 [P] [US2] Write failing Vitest tests:
   - **`frontend/src/features/tasks/TaskDetailPage.test.tsx`:**
@@ -191,6 +191,8 @@ on its own.
     - can clear the description and due date;
     - "Saving…" disabled while pending;
     - a 400 maps to fields;
+    - a 404 shows "Task not found" with a link to `/tasks`;
+    - a network error shows "We couldn't reach the service. Please try again." and keeps the values;
     - success → `/tasks/:id` with "Task updated.".
 - [ ] T031 [US2] Implement `getTask` and `updateTask` in `frontend/src/features/tasks/tasks-api.ts`, plus `frontend/src/features/tasks/TaskDetailPage.tsx` (active mode) and `frontend/src/features/tasks/EditTaskPage.tsx` (reusing `TaskForm`). Add `/tasks/:id` and `/tasks/:id/edit` routes in `frontend/src/app/routes.tsx`. T030 must then pass.
 
@@ -224,9 +226,9 @@ on its own.
 
 ### Implementation for User Story 3
 
-- [ ] T036 [US3] Implement `src/TaskLane.Application/Tasks/DeleteTask/` (`DeleteTaskCommand`, `DeleteTaskHandler`) and `src/TaskLane.Application/Tasks/RestoreTask/` (`RestoreTaskCommand`, `RestoreTaskHandler`). Extend the ListTasks validator and handler with the deleted mode until T032 and T033 pass. Register them in DI.
+- [ ] T036 [US3] Implement `src/TaskLane.Application/Tasks/DeleteTask/` (`DeleteTaskCommand`, `DeleteTaskHandler` returning a non-generic `Result`) and `src/TaskLane.Application/Tasks/RestoreTask/` (`RestoreTaskCommand`, `RestoreTaskHandler`). Extend the ListTasks validator and handler with the deleted mode until T032 and T033 pass. Register them in DI.
 - [ ] T037 [US3] Extend `TaskRepository.ListAsync` with the deleted mode and the `DeletedAt` sort in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T034 passes.
-- [ ] T038 [US3] Add `DELETE /api/tasks/{id:guid}`, `POST /api/tasks/{id:guid}/restore` and `GET /api/tasks/deleted` to `src/TaskLane.Api/Tasks/TasksController.cs`. Declare `deleted` before `{id:guid}` so the routes don't clash. T035 must then pass.
+- [ ] T038 [US3] Add `DELETE /api/tasks/{id:guid}`, `POST /api/tasks/{id:guid}/restore` and `GET /api/tasks/deleted` to `src/TaskLane.Api/Tasks/TasksController.cs`. Declare `deleted` before `{id:guid}` so the routes don't clash. Add the overload `ToActionResult(this Result result, Func<IActionResult> onSuccess)` to `src/TaskLane.Api/Common/ResultMappings.cs` for the 204 response. T035 must then pass (204 on success, 404 on error).
 - [ ] T039 [P] [US3] Write failing Vitest tests:
   - **`frontend/src/shared/ui/ConfirmDialog.test.tsx`:**
     - opens as a modal dialog with a title, message, "Delete" and "Cancel";
@@ -235,7 +237,8 @@ on its own.
   - **`frontend/src/features/tasks/TaskDetailPage.test.tsx`:**
     - Delete opens the confirmation;
     - confirming → `/tasks` with "Task deleted."; cancel → nothing changes;
-    - a deleted task is read-only, marked "Deleted on {date}", with only the "Restore" action, which shows "Task restored." and the active detail.
+    - a deleted task is read-only, marked "Deleted on {date}", with only the "Restore" action, which shows "Task restored." and the active detail;
+    - while the request is pending, the dialog's "Delete" button and the "Restore" button are disabled with `aria-busy="true"` (FR-021).
   - **`frontend/src/features/tasks/EditTaskPage.test.tsx`:** a 409 → navigates to the read-only detail with "This task was deleted. Restore it to edit."; opening edit for a task that is already deleted redirects to its detail.
   - **`frontend/src/features/tasks/TaskListPage.test.tsx`:** in deleted mode the rows show the deletion date, the empty state is "No deleted tasks.", and there is a link between "Tasks" and "Deleted tasks".
 - [ ] T040 [US3] Implement the US3 SPA until T039 passes:
@@ -261,22 +264,23 @@ on its own.
   - `status` names.
   - `dueFrom`/`dueTo`: both or neither; `yyyy-MM-dd`; start ≤ end; span ≤ `TaskListOptions.DueDateRangeMaxDays`. Test with options set to 90 (2026-01-01→2026-04-01 accepted, →2026-04-02 rejected with "Choose a range of at most 90 days.") and set to 30, to prove the limit is configurable.
   - `sort`.
-  - `direction` "asc or desc".
+  - `direction` "asc or desc"; when missing, the handler uses the sort field's default (`dueDate` asc, `title` asc, `createdAt` desc, `deletedAt` desc).
 - [ ] T042 [P] [US4] Extend `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs` (failing first):
   - **Search:** over title and description, case-insensitive for ASCII, with `%` and `_` treated literally.
   - **Filters:** by status; inclusive due-date range that excludes tasks without a due date; all filters combined.
   - **Order:** every sort field and direction; nulls last for `dueDate` in both directions; tie-breakers.
   - **Both lists:** the same filters apply in deleted mode.
-  - **Performance:** 500 tasks for one owner, a filtered and sorted page query completes in under 1 s (SC-004 sanity check).
+  - **Performance:** 500 tasks for one owner; run one warm-up query, then time only the filtered and sorted page query with `Stopwatch` and assert under 1 s. This is a sanity check for SC-004, not a production latency test; the budget is deliberately generous so it does not flake in CI.
 - [ ] T043 [P] [US4] Write failing API tests in `tests/TaskLane.Api.Tests/Tasks/FindTasksTests.cs`:
   - Each query parameter end to end.
   - Errors keyed by parameter (`errors.dueTo`, `errors.sort`, `errors.status`, `errors.direction`).
   - `GET /api/tasks/settings` → `{ "dueDateRangeMaxDays": 90 }`.
   - A second factory with `Tasks:DueDateRangeMaxDays=30` → settings returns 30, and a 31-day range → 400.
+  - A factory with `Tasks:DueDateRangeMaxDays=0` fails to start with `OptionsValidationException` (as the feature 001 JWT key test).
 
 ### Implementation for User Story 4
 
-- [ ] T044 [US4] Add `TaskListOptions` (`DueDateRangeMaxDays`, default 90, valid 1–3650, section `Tasks`) in `src/TaskLane.Application/Tasks/TaskListOptions.cs`. Bind it with `ValidateOnStart` in `src/TaskLane.Api/Program.cs`. Complete `ListTasksValidator` (injecting `IOptions<TaskListOptions>`) and `ListTasksHandler` parsing in `src/TaskLane.Application/Tasks/ListTasks/` until T041 passes.
+- [ ] T044 [US4] Add `TaskListOptions` (`DueDateRangeMaxDays`, default 90, valid 1–3650, section `Tasks`) in `src/TaskLane.Application/Tasks/TaskListOptions.cs`. Bind it with validation (1–3650) and `ValidateOnStart` in `src/TaskLane.Api/Program.cs`; the startup test in T043 must pass. Complete `ListTasksValidator` (injecting `IOptions<TaskListOptions>`) and `ListTasksHandler` parsing in `src/TaskLane.Application/Tasks/ListTasks/` until T041 passes.
 - [ ] T045 [US4] Complete `TaskRepository.ListAsync` in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T042 passes:
   - Search uses `EF.Functions.Like` with an escape character over `Title` and `Description`.
   - Filters for status and range.
@@ -287,7 +291,8 @@ on its own.
     - parsing from `URLSearchParams` and serializing back omits defaults;
     - invalid values (unknown status or sort, page `0`, `abc`, an inverted or one-sided range) are dropped and replaced with the defaults;
     - changing search or a filter resets the page to 1;
-    - the default sort differs between active and deleted mode.
+    - the default sort differs between active and deleted mode;
+    - each sort field has its default direction (`dueDate` asc, `title` asc, `createdAt` desc, `deletedAt` desc), and a direction equal to that default is omitted from the URL.
   - **`frontend/src/features/tasks/TaskFilters.test.tsx`:**
     - labelled search, status select, "Due from" and "Due to" with the hint "Up to {N} days." from the settings endpoint;
     - a range longer than N, an inverted range or a one-sided range shows the API's message and does not change the URL;
@@ -326,7 +331,7 @@ on its own.
 
   Fix any failure.
 - [ ] T054 Run the manual API checks from `specs/002-task-management/quickstart.md` §2 (including the restart with `Tasks__DueDateRangeMaxDays=30` and the demo-task idempotency check) and record the results.
-- [ ] T055 Run the manual SPA check from `specs/002-task-management/quickstart.md` §3 (360 px width, keyboard only, clean console). The user performs the browser part, and the results are recorded in the PR description.
+- [ ] T055 Run the manual SPA check from `specs/002-task-management/quickstart.md` §3 (360 px width, keyboard only, clean console). The user performs the browser part, and the results, including the approximate time to create a task and see it in the list (SC-001), are recorded in the PR description.
 
 ---
 

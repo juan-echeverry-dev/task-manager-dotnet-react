@@ -76,7 +76,7 @@ changes.
 | `status` | — | `ToDo`, `InProgress`, `Done` |
 | `dueFrom`, `dueTo` | — | `yyyy-MM-dd`; both or neither; inclusive; span ≤ configured maximum (90 days by default) |
 | `sort` | `dueDate` (active) or `deletedAt` (deleted) | `dueDate`, `createdAt`, `title`; `deletedAt` only for `/deleted` |
-| `direction` | `asc` for `dueDate`; `desc` for `deletedAt` | `asc`, `desc` |
+| `direction` | Depends on `sort`: `asc` for `dueDate` and `title`; `desc` for `createdAt` and `deletedAt` | `asc`, `desc` |
 | `page` | `1` | ≥ 1; past the last page → empty `items`, real `totalCount` |
 | `pageSize` | `20` | 1–100 |
 
