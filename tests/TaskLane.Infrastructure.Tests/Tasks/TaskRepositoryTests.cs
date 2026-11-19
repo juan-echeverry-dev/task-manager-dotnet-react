@@ -220,6 +220,88 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
         saved.UpdatedAt.ShouldBe(Now.AddHours(1));
     }
 
+    [Fact]
+    public async Task UpdateAsync_ForAnExistingTask_ReturnsTrue()
+    {
+        var task = NewTask(_owner, "Old");
+        await SaveAsync(task);
+
+        await using var context = _database.CreateContext();
+        var repository = new TaskRepository(context);
+        var loaded = await repository.GetOwnedAsync(task.Id, _owner, CancellationToken);
+        loaded!.Update("New", null, TaskItemStatus.ToDo, null, Now.AddHours(1));
+
+        (await repository.UpdateAsync(loaded, CancellationToken)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WhenTheTaskWasDeletedAfterLoading_ReturnsFalseWithoutThrowing()
+    {
+        var task = NewTask(_owner, "Old");
+        await SaveAsync(task);
+
+        await using var context = _database.CreateContext();
+        var repository = new TaskRepository(context);
+        var loaded = await repository.GetOwnedAsync(task.Id, _owner, CancellationToken);
+
+        await using (var otherContext = _database.CreateContext())
+        {
+            await new TaskRepository(otherContext).DeleteOwnedAsync(task.Id, _owner, CancellationToken);
+        }
+
+        loaded!.Update("New", null, TaskItemStatus.ToDo, null, Now.AddHours(1));
+
+        (await repository.UpdateAsync(loaded, CancellationToken)).ShouldBeFalse();
+        await using var readContext = _database.CreateContext();
+        (await readContext.Tasks.AnyAsync(CancellationToken)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteOwnedAsync_RemovesTheOwnersTaskAndReturnsTrue()
+    {
+        var mine = NewTask(_owner, "Mine");
+        var other = NewTask(_owner, "Other");
+        await SaveAsync(mine, other);
+
+        await using (var context = _database.CreateContext())
+        {
+            (await new TaskRepository(context).DeleteOwnedAsync(mine.Id, _owner, CancellationToken)).ShouldBeTrue();
+        }
+
+        await using var readContext = _database.CreateContext();
+        (await readContext.Tasks.Select(task => task.Id).ToListAsync(CancellationToken)).ShouldBe([other.Id]);
+    }
+
+    [Fact]
+    public async Task DeleteOwnedAsync_ForAnotherOwnersTaskOrUnknownId_ReturnsFalseAndChangesNothing()
+    {
+        var theirs = NewTask(_otherOwner, "Theirs");
+        await SaveAsync(theirs);
+
+        await using (var context = _database.CreateContext())
+        {
+            var repository = new TaskRepository(context);
+            (await repository.DeleteOwnedAsync(theirs.Id, _owner, CancellationToken)).ShouldBeFalse();
+            (await repository.DeleteOwnedAsync(Guid.CreateVersion7(), _owner, CancellationToken)).ShouldBeFalse();
+        }
+
+        await using var readContext = _database.CreateContext();
+        (await readContext.Tasks.SingleAsync(CancellationToken)).Id.ShouldBe(theirs.Id);
+    }
+
+    [Fact]
+    public async Task DeleteOwnedAsync_CalledTwice_ReturnsFalseTheSecondTime()
+    {
+        var task = NewTask(_owner, "Mine");
+        await SaveAsync(task);
+
+        await using var context = _database.CreateContext();
+        var repository = new TaskRepository(context);
+
+        (await repository.DeleteOwnedAsync(task.Id, _owner, CancellationToken)).ShouldBeTrue();
+        (await repository.DeleteOwnedAsync(task.Id, _owner, CancellationToken)).ShouldBeFalse();
+    }
+
     private async Task<Application.Tasks.PagedResult<TaskItem>> ListAsync(TaskListQuery query, Guid? ownerId = null)
     {
         await using var context = _database.CreateContext();
