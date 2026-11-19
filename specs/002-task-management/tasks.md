@@ -259,19 +259,19 @@ on its own.
 
 ### Tests for User Story 4 (write first, must fail)
 
-- [ ] T041 [P] [US4] Extend `tests/TaskLane.UnitTests/Tasks/ListTasks/ListTasksValidatorTests.cs` (failing first) with every list rule and message from data-model.md:
+- [X] T041 [P] [US4] Extend `tests/TaskLane.UnitTests/Tasks/ListTasks/ListTasksValidatorTests.cs` (failing first) with every list rule and message from data-model.md:
   - `search` "≤ 200 after trim".
   - `status` names.
   - `dueFrom`/`dueTo`: both or neither; `yyyy-MM-dd`; start ≤ end; span ≤ `TaskListOptions.DueDateRangeMaxDays`. Test with options set to 90 (2026-01-01→2026-04-01 accepted, →2026-04-02 rejected with "Choose a range of at most 90 days.") and set to 30, to prove the limit is configurable.
   - `sort`.
   - `direction` "asc or desc"; when missing, the handler uses the sort field's default (`dueDate` asc, `title` asc, `createdAt` desc, `deletedAt` desc).
-- [ ] T042 [P] [US4] Extend `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs` (failing first):
+- [X] T042 [P] [US4] Extend `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs` (failing first):
   - **Search:** over title and description, case-insensitive for ASCII, with `%` and `_` treated literally.
   - **Filters:** by status; inclusive due-date range that excludes tasks without a due date; all filters combined.
   - **Order:** every sort field and direction; nulls last for `dueDate` in both directions; tie-breakers.
   - **Both lists:** the same filters apply in deleted mode.
   - **Performance:** 500 tasks for one owner; run one warm-up query, then time only the filtered and sorted page query with `Stopwatch` and assert under 1 s. This is a sanity check for SC-004, not a production latency test; the budget is deliberately generous so it does not flake in CI.
-- [ ] T043 [P] [US4] Write failing API tests in `tests/TaskLane.Api.Tests/Tasks/FindTasksTests.cs`:
+- [X] T043 [P] [US4] Write failing API tests in `tests/TaskLane.Api.Tests/Tasks/FindTasksTests.cs`:
   - Each query parameter end to end.
   - Errors keyed by parameter (`errors.dueTo`, `errors.sort`, `errors.status`, `errors.direction`).
   - `GET /api/tasks/settings` → `{ "dueDateRangeMaxDays": 90 }`.
@@ -280,13 +280,13 @@ on its own.
 
 ### Implementation for User Story 4
 
-- [ ] T044 [US4] Add `TaskListOptions` (`DueDateRangeMaxDays`, default 90, valid 1–3650, section `Tasks`) in `src/TaskLane.Application/Tasks/TaskListOptions.cs`. Bind it with validation (1–3650) and `ValidateOnStart` in `src/TaskLane.Api/Program.cs`; the startup test in T043 must pass. Complete `ListTasksValidator` (injecting `IOptions<TaskListOptions>`) and `ListTasksHandler` parsing in `src/TaskLane.Application/Tasks/ListTasks/` until T041 passes.
-- [ ] T045 [US4] Complete `TaskRepository.ListAsync` in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T042 passes:
+- [X] T044 [US4] Add `TaskListOptions` (`DueDateRangeMaxDays`, default 90, valid 1–3650, section `Tasks`) in `src/TaskLane.Application/Tasks/TaskListOptions.cs`. Bind it with validation (1–3650) and `ValidateOnStart` in `src/TaskLane.Api/Program.cs`; the startup test in T043 must pass. Complete `ListTasksValidator` (injecting `IOptions<TaskListOptions>`) and `ListTasksHandler` parsing in `src/TaskLane.Application/Tasks/ListTasks/` until T041 passes.
+- [X] T045 [US4] Complete `TaskRepository.ListAsync` in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T042 passes:
   - Search uses `EF.Functions.Like` with an escape character over `Title` and `Description`.
   - Filters for status and range.
   - Sorting: `NOCASE` collation for title, nulls-last ordering for the due date, and tie-breakers.
-- [ ] T046 [US4] Add `GET /api/tasks/settings` (declared before `{id:guid}`) to `src/TaskLane.Api/Tasks/TasksController.cs`, returning `TaskSettingsResponse(int DueDateRangeMaxDays)` from `src/TaskLane.Api/Tasks/TaskSettingsResponse.cs`, until T043 passes.
-- [ ] T047 [P] [US4] Write failing Vitest tests:
+- [X] T046 [US4] Add `GET /api/tasks/settings` (declared before `{id:guid}`) to `src/TaskLane.Api/Tasks/TasksController.cs`, returning `TaskSettingsResponse(int DueDateRangeMaxDays)` from `src/TaskLane.Api/Tasks/TaskSettingsResponse.cs`, until T043 passes.
+- [X] T047 [P] [US4] Write failing Vitest tests:
   - **`frontend/src/features/tasks/task-query.test.ts`:**
     - parsing from `URLSearchParams` and serializing back omits defaults;
     - invalid values (unknown status or sort, page `0`, `abc`, an inverted or one-sided range) are dropped and replaced with the defaults;
@@ -303,7 +303,7 @@ on its own.
     - typing a search updates the URL after the debounce (fake timers);
     - the empty state "No tasks match your search." has a clear action;
     - the same tools appear in deleted mode.
-- [ ] T048 [US4] Implement the US4 SPA until T047 passes:
+- [X] T048 [US4] Implement the US4 SPA until T047 passes:
   - **Tasks feature:** `frontend/src/features/tasks/task-query.ts` and `TaskFilters.tsx`.
   - **API client:** `getTaskSettings` and query serialization in `tasks-api.ts`.
   - **Wiring:** use `TaskFilters` with URL state through `useSearchParams` in `TaskListPage.tsx`, and add a "no match" empty state.
