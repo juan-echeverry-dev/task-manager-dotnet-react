@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using TaskLane.Api.Common;
 using TaskLane.Application.Tasks;
 using TaskLane.Application.Tasks.CreateTask;
+using TaskLane.Application.Tasks.GetTask;
 using TaskLane.Application.Tasks.ListTasks;
+using TaskLane.Application.Tasks.UpdateTask;
 
 namespace TaskLane.Api.Tasks;
 
@@ -60,6 +62,52 @@ public sealed class TasksController : ControllerBase
             cancellationToken);
 
         return result.ToActionResult(task => Created($"/api/tasks/{task.Id}", task));
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType<TaskResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Get(
+        Guid id,
+        [FromServices] GetTaskHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        if (User.GetUserId() is not { } ownerId)
+        {
+            return InvalidSession();
+        }
+
+        var result = await handler.HandleAsync(new GetTaskQuery(ownerId, id), cancellationToken);
+
+        return result.ToActionResult(Ok);
+    }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType<TaskResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
+    public async Task<IActionResult> Update(
+        Guid id,
+        UpdateTaskRequest request,
+        [FromServices] UpdateTaskHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(handler);
+
+        if (User.GetUserId() is not { } ownerId)
+        {
+            return InvalidSession();
+        }
+
+        var result = await handler.HandleAsync(
+            new UpdateTaskCommand(ownerId, id, request.Title ?? string.Empty, request.Description, request.Status, request.DueDate),
+            cancellationToken);
+
+        return result.ToActionResult(Ok);
     }
 
     // The token is validated by then; a subject that is not a user id is still not a session.
