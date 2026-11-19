@@ -20,9 +20,11 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
     {
         ArgumentNullException.ThrowIfNull(query);
 
-        var tasks = context.Tasks.AsNoTracking()
-            .Where(task => task.OwnerId == ownerId)
-            .Where(task => query.Deleted ? task.DeletedAt != null : task.DeletedAt == null);
+        var tasks = Filter(
+            context.Tasks.AsNoTracking()
+                .Where(task => task.OwnerId == ownerId)
+                .Where(task => query.Deleted ? task.DeletedAt != null : task.DeletedAt == null),
+            query);
 
         var totalCount = await tasks.CountAsync(cancellationToken);
 
@@ -44,6 +46,38 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
 
         await context.SaveChangesAsync(cancellationToken);
     }
+
+    private static IQueryable<TaskItem> Filter(IQueryable<TaskItem> tasks, TaskListQuery query)
+    {
+        if (query.Search is { } search)
+        {
+            // "Contains", case-insensitive for ASCII letters (SQLite LIKE); wildcards in the text are literal.
+            var pattern = $"%{EscapeLike(search)}%";
+            tasks = tasks.Where(task =>
+                EF.Functions.Like(task.Title, pattern, LikeEscape)
+                || (task.Description != null && EF.Functions.Like(task.Description, pattern, LikeEscape)));
+        }
+
+        if (query.Status is { } status)
+        {
+            tasks = tasks.Where(task => task.Status == status);
+        }
+
+        // Inclusive on both ends; tasks without a due date never match a range.
+        if (query.DueFrom is { } dueFrom && query.DueTo is { } dueTo)
+        {
+            tasks = tasks.Where(task => task.DueDate != null && task.DueDate >= dueFrom && task.DueDate <= dueTo);
+        }
+
+        return tasks;
+    }
+
+    private const string LikeEscape = "\\";
+
+    private static string EscapeLike(string value) =>
+        value.Replace(LikeEscape, LikeEscape + LikeEscape, StringComparison.Ordinal)
+            .Replace("%", LikeEscape + "%", StringComparison.Ordinal)
+            .Replace("_", LikeEscape + "_", StringComparison.Ordinal);
 
     private static IOrderedQueryable<TaskItem> Order(IQueryable<TaskItem> tasks, TaskListQuery query)
     {
