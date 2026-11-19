@@ -277,15 +277,15 @@ follow the spec's priorities:
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T028 [P] Write `docs/adr/0012-task-board-routed-side-panel.md`:
+- [X] T028 [P] Write `docs/adr/0012-task-board-routed-side-panel.md`:
   - Context: the list and separate pages.
   - Decision: nested routes and the native `<dialog>` panel, `useInfiniteQuery` per column, no API change.
   - Alternatives: a query-parameter panel, a modal without an address, a drawer library, a board endpoint.
   - Consequences: three requests per filter change; the panel is modal, so the board is inert while it is open.
   - Add the row to `docs/adr/README.md`.
-- [ ] T029 [P] Add a "Replaced by [spec 004](../../004-task-board/contracts/spa-routes.md) for the task screens" banner under the title of `specs/002-task-management/contracts/spa-routes.md`; update the Tasks bullets in `README.md` (board, side panel, Load more) and the SPA notes in `docs/architecture.md` if they describe the list
-- [ ] T030 [P] Search `frontend/src` for leftovers: `TaskListPage`, `NewTaskPage`, `EditTaskPage`, `TaskDetailPage`, `task-query`, `Pagination`, `page=` in task code, and "Back to tasks" links inside the panel. Remove dead code and unused exports, and check that `npm run lint` has zero warnings
-- [ ] T031 Run the full gate:
+- [X] T029 [P] Add a "Replaced by [spec 004](../../004-task-board/contracts/spa-routes.md) for the task screens" banner under the title of `specs/002-task-management/contracts/spa-routes.md`; update the Tasks bullets in `README.md` (board, side panel, Load more) and the SPA notes in `docs/architecture.md` if they describe the list
+- [X] T030 [P] Search `frontend/src` for leftovers: `TaskListPage`, `NewTaskPage`, `EditTaskPage`, `TaskDetailPage`, `task-query`, `Pagination`, `page=` in task code, and "Back to tasks" links inside the panel. Remove dead code and unused exports, and check that `npm run lint` has zero warnings
+- [X] T031 Run the full gate:
   - `cd frontend; npm run check`.
   - `dotnet build TaskLane.slnx`.
   - `dotnet format TaskLane.slnx --verify-no-changes`.
