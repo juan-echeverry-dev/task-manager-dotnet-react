@@ -114,6 +114,24 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
         page.TotalCount.ShouldBe(1);
     }
 
+    // Regression: (page - 1) * pageSize used to overflow int, wrap to a negative or smaller offset,
+    // and return the first page's items under the requested page number (spec edge case "a page
+    // beyond the last page returns an empty page with the correct total").
+    [Theory]
+    [InlineData(int.MaxValue, 20)]
+    [InlineData(int.MaxValue, 100)]
+    [InlineData(107_374_184, 20)]
+    public async Task ListAsync_PageWhoseOffsetExceedsInt32_ReturnsNoItemsWithTheRealTotal(int pageNumber, int pageSize)
+    {
+        await SaveAsync(NewTask(_owner, "Only"));
+
+        var page = await ListAsync(TaskListQuery.Default with { Page = pageNumber, PageSize = pageSize });
+
+        page.Items.ShouldBeEmpty();
+        page.Page.ShouldBe(pageNumber);
+        page.TotalCount.ShouldBe(1);
+    }
+
     [Fact]
     public async Task ListAsync_DeletedList_ReturnsOnlyTheOwnersDeletedTasksMostRecentlyDeletedFirst()
     {
