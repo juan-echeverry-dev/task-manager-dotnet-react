@@ -34,7 +34,7 @@ describe('TaskListPage', () => {
     renderApp('/tasks')
 
     expect(await screen.findByRole('heading', { name: 'Tasks' })).toBeInTheDocument()
-    const items = within(screen.getByRole('list', { name: 'Tasks' })).getAllByRole('listitem')
+    const items = within(await screen.findByRole('list', { name: 'Tasks' })).getAllByRole('listitem')
     expect(items).toHaveLength(3)
 
     const [overdue, done, someday] = items as [HTMLElement, HTMLElement, HTMLElement]
