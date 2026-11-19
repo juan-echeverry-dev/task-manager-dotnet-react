@@ -111,6 +111,63 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
         page.TotalCount.ShouldBe(1);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GetOwnedAsync_ReturnsTheOwnersTaskActiveOrDeleted(bool deleted)
+    {
+        var task = NewTask(_owner, "Mine");
+        if (deleted)
+        {
+            task.Delete(Now);
+        }
+
+        await SaveAsync(task);
+
+        await using var context = _database.CreateContext();
+        var found = await new TaskRepository(context).GetOwnedAsync(task.Id, _owner, CancellationToken);
+
+        found.ShouldNotBeNull();
+        found.Id.ShouldBe(task.Id);
+        found.IsDeleted.ShouldBe(deleted);
+    }
+
+    [Fact]
+    public async Task GetOwnedAsync_ForAnotherOwnersTaskOrUnknownId_ReturnsNull()
+    {
+        var theirs = NewTask(_otherOwner, "Theirs");
+        await SaveAsync(theirs);
+
+        await using var context = _database.CreateContext();
+        var repository = new TaskRepository(context);
+
+        (await repository.GetOwnedAsync(theirs.Id, _owner, CancellationToken)).ShouldBeNull();
+        (await repository.GetOwnedAsync(Guid.CreateVersion7(), _owner, CancellationToken)).ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_PersistsChangesToALoadedTask()
+    {
+        var task = NewTask(_owner, "Old", new DateOnly(2026, 12, 1));
+        await SaveAsync(task);
+
+        await using (var context = _database.CreateContext())
+        {
+            var repository = new TaskRepository(context);
+            var loaded = await repository.GetOwnedAsync(task.Id, _owner, CancellationToken);
+            loaded!.Update("New", "Description", TaskItemStatus.Done, null, Now.AddHours(1));
+            await repository.UpdateAsync(loaded, CancellationToken);
+        }
+
+        await using var readContext = _database.CreateContext();
+        var saved = await readContext.Tasks.SingleAsync(CancellationToken);
+        saved.Title.ShouldBe("New");
+        saved.Description.ShouldBe("Description");
+        saved.Status.ShouldBe(TaskItemStatus.Done);
+        saved.DueDate.ShouldBeNull();
+        saved.UpdatedAt.ShouldBe(Now.AddHours(1));
+    }
+
     private async Task<Application.Tasks.PagedResult<TaskItem>> ListAsync(TaskListQuery query, Guid? ownerId = null)
     {
         await using var context = _database.CreateContext();
