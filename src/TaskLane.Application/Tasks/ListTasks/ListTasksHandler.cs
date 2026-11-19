@@ -6,7 +6,9 @@ using TaskLane.Application.Tasks.Ports;
 
 namespace TaskLane.Application.Tasks.ListTasks;
 
-/// <summary>Lists the signed-in person's tasks, one page at a time (spec FR-016 to FR-018).</summary>
+/// <summary>
+/// Lists the signed-in person's active or deleted tasks, one page at a time (spec FR-014, FR-016 to FR-018).
+/// </summary>
 public sealed class ListTasksHandler(IValidator<ListTasksQuery> validator, ITaskRepository tasks)
 {
     public async Task<Result<PagedResult<TaskResponse>>> HandleAsync(ListTasksQuery query, CancellationToken cancellationToken)
@@ -19,8 +21,15 @@ public sealed class ListTasksHandler(IValidator<ListTasksQuery> validator, ITask
             return Result.Failure<PagedResult<TaskResponse>>(validation.ToError());
         }
 
+        var sort = ListSorting.TryParseField(query.Sort, query.Deleted, out var field)
+            ? field
+            : ListSorting.DefaultField(query.Deleted);
+
         var listQuery = TaskListQuery.Default with
         {
+            Deleted = query.Deleted,
+            Sort = sort,
+            Direction = ListSorting.DefaultDirection(sort),
             Page = query.Page ?? 1,
             PageSize = query.PageSize ?? TaskListQuery.DefaultPageSize,
         };

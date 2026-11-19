@@ -7,8 +7,10 @@ using TaskLane.Application.Identity.GetProfile;
 using TaskLane.Application.Identity.Register;
 using TaskLane.Application.Identity.SignIn;
 using TaskLane.Application.Tasks.CreateTask;
+using TaskLane.Application.Tasks.DeleteTask;
 using TaskLane.Application.Tasks.GetTask;
 using TaskLane.Application.Tasks.ListTasks;
+using TaskLane.Application.Tasks.RestoreTask;
 using TaskLane.Application.Tasks.UpdateTask;
 
 namespace TaskLane.Application;
@@ -42,6 +44,9 @@ public static class DependencyInjection
 
         services.AddSingleton<IValidator<UpdateTaskCommand>, UpdateTaskValidator>();
         services.AddScoped<UpdateTaskHandler>();
+
+        services.AddScoped<DeleteTaskHandler>();
+        services.AddScoped<RestoreTaskHandler>();
 
         return services;
     }
