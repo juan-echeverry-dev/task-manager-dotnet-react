@@ -32,7 +32,8 @@ reviewable and keep scope explicit.
 Production code that implements behavior MUST be preceded by a failing test.
 
 - Red → Green → Refactor is mandatory. Each step SHOULD be an atomic commit (`test:`, `feat:`,
-  `refactor:`) so the cycle is visible in history.
+  `refactor:`) so the cycle is visible in history, made only once confirmed as required by
+  Development Workflow and Quality Gates.
 - Exempt from test-first: scaffolding, configuration, EF Core migrations, CI, and documentation.
 - Test pyramid: domain and application rules are covered by fast unit tests; persistence by tests
   against a real SQLite database (no mocked `DbContext`); HTTP endpoints by in-process
@@ -138,6 +139,11 @@ Concrete technology choices and their trade-offs are recorded in ADRs, not here.
 - Work happens on feature branches named after the spec (`NNN-short-name`) and merges to `main`
   through a pull request.
 - Commits follow Conventional Commits. No AI co-author trailers.
+- No change is committed until the repository owner has explicitly confirmed it. The agent
+  or contributor first presents the change (what changed and the results of the build and
+  tests that were run) and then waits. A confirmation covers only the changes it names; it
+  does not extend to later changes. Without a commit nothing can be pushed or merged, so
+  this rule also gates pushes and pull requests.
 - A change is mergeable only when all of the following pass, locally and in CI:
   1. `dotnet build` with zero warnings and `dotnet format --verify-no-changes`.
   2. All backend test projects, including architecture tests.
@@ -157,4 +163,4 @@ constitution wins until amended.
 - Reviews of every spec, plan, and pull request MUST verify compliance with these principles.
 - Runtime guidance for AI agents lives in `CLAUDE.md` and MUST stay consistent with this file.
 
-**Version**: 1.0.1 | **Ratified**: 2026-11-17 | **Last Amended**: 2026-11-17
+**Version**: 1.1.0 | **Ratified**: 2026-11-17 | **Last Amended**: 2026-11-18
