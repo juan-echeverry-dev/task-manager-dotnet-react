@@ -201,7 +201,7 @@ active tasks unchanged.
 
 ### Tests for User Story 3 (write first, must fail)
 
-- [ ] T031 [US3] Create `tests/TaskLane.Infrastructure.Tests/Persistence/RemoveTaskSoftDeleteMigrationTests.cs` on a real SQLite connection (reuse `Support/SqliteDatabase.cs`):
+- [X] T031 [US3] Create `tests/TaskLane.Infrastructure.Tests/Persistence/RemoveTaskSoftDeleteMigrationTests.cs` on a real SQLite connection (reuse `Support/SqliteDatabase.cs`):
   1. Migrate to `AddTasks` with `IMigrator`.
   2. Insert a user plus one active and one soft-deleted task by raw SQL.
   3. Migrate to latest.
@@ -212,15 +212,15 @@ active tasks unchanged.
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Remove `DeletedAt` from `src/TaskLane.Domain/Tasks/TaskItem.cs`. In `src/TaskLane.Infrastructure/Persistence/Configurations/TaskItemConfiguration.cs`:
+- [X] T032 [US3] Remove `DeletedAt` from `src/TaskLane.Domain/Tasks/TaskItem.cs`. In `src/TaskLane.Infrastructure/Persistence/Configurations/TaskItemConfiguration.cs`:
   - Remove the `DeletedAt` property and the `IsDeleted` ignore.
   - Replace the indexes with `HasIndex(task => new { task.OwnerId, task.DueDate }).HasDatabaseName("IX_Tasks_OwnerId_DueDate")` and `HasIndex(task => new { task.OwnerId, task.CreatedAt }).HasDatabaseName("IX_Tasks_OwnerId_CreatedAt")`.
   - Remove the `DeletedAt == null` filter from `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs`.
   - Remove the `task.DeletedAt == null` assertion from `tests/TaskLane.Infrastructure.Tests/Tasks/DemoTasksSeederTests.cs` (around line 42).
-- [ ] T033 [US3] Generate the migration with `dotnet ef migrations add RemoveTaskSoftDelete --project src/TaskLane.Infrastructure --startup-project src/TaskLane.Api --output-dir Persistence/Migrations`. Then:
+- [X] T033 [US3] Generate the migration with `dotnet ef migrations add RemoveTaskSoftDelete --project src/TaskLane.Infrastructure --startup-project src/TaskLane.Api --output-dir Persistence/Migrations`. Then:
   - Insert `migrationBuilder.Sql("DELETE FROM \"Tasks\" WHERE \"DeletedAt\" IS NOT NULL;");` as the first statement of `Up`.
   - Verify that `Down` restores the nullable column and the old indexes (T031 passes).
-- [ ] T034 [P] [US3] In `src/TaskLane.Infrastructure/Tasks/DemoTasksSeeder.cs`:
+- [X] T034 [P] [US3] In `src/TaskLane.Infrastructure/Tasks/DemoTasksSeeder.cs`:
   - Update the class doc so it no longer mentions deleted tasks.
   - Change the first sample's description to "Walk through creating, finding and deleting tasks.".
   - Confirm that `tests/TaskLane.Infrastructure.Tests/Tasks/DemoTasksSeederTests.cs` still passes (FR-008), adjusting only the references to deleted rows.

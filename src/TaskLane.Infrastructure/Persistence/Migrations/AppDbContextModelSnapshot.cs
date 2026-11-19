@@ -61,9 +61,6 @@ namespace TaskLane.Infrastructure.Persistence.Migrations
                     b.Property<long>("CreatedAt")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long?>("DeletedAt")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
@@ -89,11 +86,11 @@ namespace TaskLane.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerId", "DeletedAt", "CreatedAt")
-                        .HasDatabaseName("IX_Tasks_OwnerId_DeletedAt_CreatedAt");
+                    b.HasIndex("OwnerId", "CreatedAt")
+                        .HasDatabaseName("IX_Tasks_OwnerId_CreatedAt");
 
-                    b.HasIndex("OwnerId", "DeletedAt", "DueDate")
-                        .HasDatabaseName("IX_Tasks_OwnerId_DeletedAt_DueDate");
+                    b.HasIndex("OwnerId", "DueDate")
+                        .HasDatabaseName("IX_Tasks_OwnerId_DueDate");
 
                     b.ToTable("Tasks", (string)null);
                 });

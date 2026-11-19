@@ -22,8 +22,7 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
 
         var tasks = Filter(
             context.Tasks.AsNoTracking()
-                .Where(task => task.OwnerId == ownerId)
-                .Where(task => task.DeletedAt == null),
+                .Where(task => task.OwnerId == ownerId),
             query);
 
         var totalCount = await tasks.CountAsync(cancellationToken);

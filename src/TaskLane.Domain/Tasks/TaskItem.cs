@@ -34,8 +34,6 @@ public sealed class TaskItem
 
     public DateTimeOffset UpdatedAt { get; private set; }
 
-    public DateTimeOffset? DeletedAt { get; private set; }
-
     public static TaskItem Create(
         Guid id,
         Guid ownerId,

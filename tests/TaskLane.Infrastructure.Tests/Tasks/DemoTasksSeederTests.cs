@@ -39,7 +39,7 @@ public sealed class DemoTasksSeederTests : IAsyncLifetime
 
         var tasks = await TasksAsync();
         tasks.Count.ShouldBe(6);
-        tasks.ShouldAllBe(task => task.OwnerId == demoId && task.DeletedAt == null);
+        tasks.ShouldAllBe(task => task.OwnerId == demoId);
         tasks.Select(task => task.Status).Distinct().ShouldBe(
             [TaskItemStatus.ToDo, TaskItemStatus.InProgress, TaskItemStatus.Done], ignoreOrder: true);
         tasks.ShouldContain(task => task.Status == TaskItemStatus.ToDo && task.DueDate == Today.AddDays(-3));

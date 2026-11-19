@@ -46,13 +46,11 @@ internal sealed class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.Property(task => task.UpdatedAt)
             .IsRequired()
             .HasConversion(new UtcTicksConverter());
-        builder.Property(task => task.DeletedAt)
-            .HasConversion(new UtcTicksConverter());
 
-        // Cover the default order of both lists, scoped to the owner.
-        builder.HasIndex(task => new { task.OwnerId, task.DeletedAt, task.DueDate })
-            .HasDatabaseName("IX_Tasks_OwnerId_DeletedAt_DueDate");
-        builder.HasIndex(task => new { task.OwnerId, task.DeletedAt, task.CreatedAt })
-            .HasDatabaseName("IX_Tasks_OwnerId_DeletedAt_CreatedAt");
+        // Cover the default order and the "newest first" order of the list, scoped to the owner.
+        builder.HasIndex(task => new { task.OwnerId, task.DueDate })
+            .HasDatabaseName("IX_Tasks_OwnerId_DueDate");
+        builder.HasIndex(task => new { task.OwnerId, task.CreatedAt })
+            .HasDatabaseName("IX_Tasks_OwnerId_CreatedAt");
     }
 }
