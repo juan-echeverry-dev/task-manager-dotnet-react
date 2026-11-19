@@ -4,10 +4,11 @@ import { RegisterPage } from '../features/auth/RegisterPage'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { SignInPage } from '../features/auth/SignInPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
-import { EditTaskPage } from '../features/tasks/EditTaskPage'
+import { EditTaskPanel } from '../features/tasks/EditTaskPanel'
 import { NewTaskPage } from '../features/tasks/NewTaskPage'
 import { TaskBoardPage } from '../features/tasks/TaskBoardPage'
-import { TaskDetailPage } from '../features/tasks/TaskDetailPage'
+import { TaskDetailPanel } from '../features/tasks/TaskDetailPanel'
+import { TaskPanel } from '../features/tasks/TaskPanel'
 import { AppLayout } from '../shared/layout/AppLayout'
 import { HomePage } from './routes/HomePage'
 import { NotFoundPage } from './routes/NotFoundPage'
@@ -29,10 +30,21 @@ export const routes: RouteObject[] = [
         element: <RequireAuth />,
         children: [
           { path: 'profile', element: <ProfilePage /> },
-          { path: 'tasks', element: <TaskBoardPage /> },
+          {
+            // The board stays mounted while the side panel opens and closes (spec 004, research R3).
+            path: 'tasks',
+            element: <TaskBoardPage />,
+            children: [
+              {
+                element: <TaskPanel />,
+                children: [
+                  { path: ':id', element: <TaskDetailPanel /> },
+                  { path: ':id/edit', element: <EditTaskPanel /> },
+                ],
+              },
+            ],
+          },
           { path: 'tasks/new', element: <NewTaskPage /> },
-          { path: 'tasks/:id', element: <TaskDetailPage /> },
-          { path: 'tasks/:id/edit', element: <EditTaskPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },

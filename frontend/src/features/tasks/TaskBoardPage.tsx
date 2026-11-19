@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, Outlet, useSearchParams } from 'react-router'
+import { Link, Outlet, useMatch, useSearchParams } from 'react-router'
 import { useSession } from '../auth/session/useSession'
 import { boardHref, boardSearch } from './board-links'
 import { hasFilters, parseBoardQuery, serializeBoardQuery, withChanges, type BoardQuery } from './board-query'
@@ -20,6 +20,8 @@ export function TaskBoardPage() {
   const query = parseBoardQuery(searchParams)
   const search = boardSearch(query)
   const today = localToday()
+  // The panel shows its own messages; the board shows them only when no panel is open.
+  const onBoard = useMatch('/tasks') !== null
 
   const columns = [
     { status: 'ToDo', data: useBoardColumn('ToDo', query) },
@@ -56,7 +58,7 @@ export function TaskBoardPage() {
         </Link>
       </div>
 
-      <StatusMessage />
+      {onBoard ? <StatusMessage /> : null}
 
       <TaskFilters query={query} maxRangeDays={settings.data?.dueDateRangeMaxDays} onChange={change} />
 
