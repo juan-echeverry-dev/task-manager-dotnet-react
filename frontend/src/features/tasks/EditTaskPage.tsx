@@ -27,8 +27,13 @@ export function EditTaskPage() {
     await navigate(`/tasks/${id}`, { state })
   }
 
-  // Deleted in another tab after this form was opened (409).
+  // Deleted in another tab after this form was opened (spec 003 FR-003).
   const handleError = (error: unknown) => {
+    if (error instanceof ApiError && error.status === 404) {
+      const state: TaskStatusState = { alert: taskMessages.noLongerExists }
+      void Promise.resolve(navigate('/tasks', { state })).then(() => queryClient.invalidateQueries({ queryKey: ['tasks'] }))
+      return true
+    }
     if (!(error instanceof ApiError && error.status === 409)) return false
     // Leave first: refreshing the task here would redirect without the explanation.
     const state: TaskStatusState = { alert: taskMessages.deletedRestoreToEdit }

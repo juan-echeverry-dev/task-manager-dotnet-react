@@ -44,7 +44,11 @@ public sealed class UpdateTaskHandler(
             TaskInputFormat.ParseOptionalDate(command.DueDate),
             timeProvider.GetUtcNow());
 
-        await tasks.UpdateAsync(task, cancellationToken);
+        // The task may have been deleted between loading and saving.
+        if (!await tasks.UpdateAsync(task, cancellationToken))
+        {
+            return Result.Failure<TaskResponse>(TaskErrors.NotFound);
+        }
 
         return Result.Success(TaskResponse.From(task));
     }

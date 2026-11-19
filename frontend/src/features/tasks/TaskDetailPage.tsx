@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { ApiError } from '../../shared/api/http-client'
 import { ConfirmDialog } from '../../shared/ui/ConfirmDialog'
 import { OverdueBadge, StatusBadge } from './badges'
 import { formatDate, formatTimestamp } from './format'
@@ -116,15 +117,19 @@ function DeleteAction({ task, accessToken, onFailed }: TaskActionProps) {
   const mutation = useMutation({ mutationFn: () => deleteTask(task.id, accessToken) })
 
   const confirm = async () => {
+    let state: TaskStatusState = { status: taskMessages.deleted }
     try {
       await mutation.mutateAsync()
-    } catch {
-      setConfirming(false)
-      onFailed()
-      return
+    } catch (error) {
+      // Already deleted elsewhere: nothing left to show here (spec 003 FR-003).
+      if (!(error instanceof ApiError && error.status === 404)) {
+        setConfirming(false)
+        onFailed()
+        return
+      }
+      state = { alert: taskMessages.noLongerExists }
     }
     await queryClient.invalidateQueries({ queryKey: ['tasks'] })
-    const state: TaskStatusState = { status: taskMessages.deleted }
     await navigate('/tasks', { state })
   }
 

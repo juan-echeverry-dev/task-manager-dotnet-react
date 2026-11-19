@@ -30,22 +30,6 @@ public sealed class FindTasksTests(ApiFactory factory) : IClassFixture<ApiFactor
             .ShouldBe(["Write notes"]);
     }
 
-    [Fact]
-    public async Task DeletedList_SupportsTheSameParameters()
-    {
-        var (_, token) = await _client.RegisterAndSignInAsync();
-        var demo = await CreateAsync(token, "Prepare demo", "Done", "2026-12-10");
-        var other = await CreateAsync(token, "Write notes", "ToDo", "2026-12-05");
-        await _client.SendAsync(HttpMethod.Delete, $"/api/tasks/{demo}", token);
-        await _client.SendAsync(HttpMethod.Delete, $"/api/tasks/{other}", token);
-
-        var page = await (await _client.GetAsync(
-            "/api/tasks/deleted?search=demo&status=Done&dueFrom=2026-12-01&dueTo=2026-12-31&sort=deletedAt&direction=asc", token))
-            .ReadJsonAsync();
-
-        page.Titles().ShouldBe(["Prepare demo"]);
-    }
-
     [Theory]
     [InlineData("dueFrom=2026-01-01&dueTo=2026-04-02", "dueTo", "Choose a range of at most 90 days.")]
     [InlineData("dueFrom=2026-02-01&dueTo=2026-01-01", "dueTo", "The start date must be on or before the end date.")]

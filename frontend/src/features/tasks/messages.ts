@@ -6,7 +6,8 @@ export const taskMessages = {
   deleted: 'Task deleted.',
   restored: 'Task restored.',
   deletedRestoreToEdit: 'This task was deleted. Restore it to edit.',
-  deleteConfirmation: 'Delete this task? You can restore it from Deleted tasks.',
+  deleteConfirmation: "Delete this task permanently? This can't be undone.",
+  noLongerExists: 'This task no longer exists.',
 } as const
 
 /** Navigation state used to show a one-time message on the next screen. */
