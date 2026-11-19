@@ -15,6 +15,9 @@ Runtime guidance for AI coding agents working in this repository. The
 - **No** generic repositories, Unit-of-Work wrappers, MediatR, AutoMapper, or speculative
   interfaces (constitution principle V).
 - English for code, comments, commits, and docs. No AI co-author trailers in commits or PRs.
+- **Confirm before committing**: present each change (what changed, build and test results) and
+  commit only after the repository owner explicitly confirms it. A confirmation covers only the
+  changes it names; no commit means no push or PR either.
 
 ## Commands
 
