@@ -250,13 +250,13 @@ follow the spec's priorities:
 
 ### Tests for User Story 5 (write first, must fail)
 
-- [ ] T025 [P] [US5] Update `features/tasks/TaskFilters.test.tsx`:
+- [X] T025 [P] [US5] Update `features/tasks/TaskFilters.test.tsx`:
   - The controls appear in the order Search, Due from, Due to, Apply, Sort by, Order, and "Clear search and filters" when a filter is active.
   - There is no "Status" control.
   - The sort options are exactly Due date, Created and Title.
   - The debounce, range validation and messages behave as before.
   - The bar is a single `role="search"` region.
-- [ ] T026 [P] [US5] Extend `features/tasks/TaskBoardPage.test.tsx` with US5 scenarios 2–6:
+- [X] T026 [P] [US5] Extend `features/tasks/TaskBoardPage.test.tsx` with US5 scenarios 2–6:
   - `/tasks?search=demo&sort=title&direction=desc` sends those values in all three column requests.
   - A range is applied to all columns, and a `400` range message is shown.
   - Typing a search updates the address after the debounce and resets loaded batches.
@@ -265,7 +265,7 @@ follow the spec's priorities:
 
 ### Implementation for User Story 5
 
-- [ ] T027 [US5] Restyle `features/tasks/TaskFilters.tsx` as one bar (research R6):
+- [X] T027 [US5] Restyle `features/tasks/TaskFilters.tsx` as one bar (research R6):
   - A `role="search"` container with a white background, border and rounded corners.
   - Inside, a `flex flex-wrap items-end gap-3` row: Search grows (`min-w-48 flex-1`), the date fields are fixed width, then Apply, Sort by, Order and "Clear search and filters".
   - Compact labels and inputs. If needed, add a `size="sm"` option to `shared/ui/TextField.tsx` and `SelectField.tsx` without changing their defaults.

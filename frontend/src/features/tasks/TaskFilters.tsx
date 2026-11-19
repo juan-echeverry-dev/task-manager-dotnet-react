@@ -11,7 +11,9 @@ const DIRECTION_OPTIONS = [
 ]
 
 const buttonClass =
-  'rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
+  'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
+const clearClass =
+  'rounded-md px-2 py-1.5 text-sm font-medium text-sky-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600'
 
 interface TaskFiltersProps {
   query: BoardQuery
@@ -71,58 +73,70 @@ export function TaskFilters({ query, maxRangeDays, onChange }: TaskFiltersProps)
   const rangeHint = maxRangeDays === undefined ? undefined : `Up to ${maxRangeDays} days.`
 
   return (
-    <div role="search" aria-label="Find tasks" className="space-y-4 rounded-md border border-slate-200 bg-white p-4">
-      <TextField
-        label="Search"
-        type="search"
-        value={search}
-        maxLength={200}
-        onChange={(event) => setSearch(event.target.value)}
-      />
-
-      <form
-        noValidate
-        className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-start"
-        onSubmit={(event) => {
-          event.preventDefault()
-          applyRange()
-        }}
-      >
+    <div role="search" aria-label="Find tasks" className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+      {/* One row that wraps on narrow screens (spec 004 FR-014). Buttons without a label line up with the
+          controls through the label's height (mt-5). */}
+      <div className="flex flex-wrap items-start gap-3">
         <TextField
-          label="Due from"
-          type="date"
-          value={dueFrom}
-          error={rangeErrors.dueFrom}
-          onChange={(event) => setDueFrom(event.target.value)}
+          label="Search"
+          type="search"
+          value={search}
+          maxLength={200}
+          compact
+          fieldClassName="min-w-48 flex-1"
+          onChange={(event) => setSearch(event.target.value)}
         />
-        <TextField
-          label="Due to"
-          type="date"
-          value={dueTo}
-          hint={rangeHint}
-          error={rangeErrors.dueTo}
-          onChange={(event) => setDueTo(event.target.value)}
-        />
-        <button type="submit" className={`${buttonClass} sm:mt-6`}>
-          Apply
-        </button>
-      </form>
 
-      <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+        <form
+          noValidate
+          className="contents"
+          onSubmit={(event) => {
+            event.preventDefault()
+            applyRange()
+          }}
+        >
+          <TextField
+            label="Due from"
+            type="date"
+            value={dueFrom}
+            error={rangeErrors.dueFrom}
+            compact
+            fieldClassName="w-full sm:w-40"
+            onChange={(event) => setDueFrom(event.target.value)}
+          />
+          <TextField
+            label="Due to"
+            type="date"
+            value={dueTo}
+            hint={rangeHint}
+            error={rangeErrors.dueTo}
+            compact
+            fieldClassName="w-full sm:w-40"
+            onChange={(event) => setDueTo(event.target.value)}
+          />
+          <button type="submit" className={`${buttonClass} sm:mt-5`}>
+            Apply
+          </button>
+        </form>
+
         <SelectField
           label="Sort by"
           options={SORT_FIELDS.map((field) => ({ value: field, label: SORT_LABELS[field] }))}
           value={query.sort}
+          compact
+          fieldClassName="w-full sm:w-36"
           onChange={(event) => onChange({ sort: event.target.value as BoardQuery['sort'] })}
         />
         <SelectField
           label="Order"
           options={DIRECTION_OPTIONS}
           value={query.direction}
+          compact
+          fieldClassName="w-full sm:w-36"
           onChange={(event) => onChange({ direction: event.target.value as BoardQuery['direction'] })}
         />
         {hasFilters(query) ? (
-          <button type="button" className={buttonClass} onClick={clear}>
+          <button type="button" className={`${clearClass} sm:mt-5`} onClick={clear}>
             Clear search and filters
           </button>
         ) : null}
