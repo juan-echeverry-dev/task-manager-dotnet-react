@@ -27,6 +27,18 @@ exists)." The user account and sign-in already exist (feature `001-user-authenti
 - Q: What does the task list offer? → A: Text search, filter by status, choice of sort order, and
   pagination.
 - Q: What happens when the same task is edited in two places? → A: The last saved change wins.
+- Q: What happens when a person opens or edits one of their own deleted tasks? → A: For now, the
+  owner can view a deleted task in read-only mode; no editing options are offered, and any edit
+  attempt is refused until the task is restored.
+- Q: Is the "no more than 90 days" limit for the due date field or for the list filter? → A: For
+  the list filter: tasks can be filtered by a due-date range spanning at most 90 days, a limit
+  that must be changeable later by configuration if the client decides so. The due date field
+  itself only rejects obvious typos: it accepts dates from 2000-01-01 to 2099-12-31.
+- Q: How is the deleted-tasks list ordered and which tools does it offer? → A: The same tools as
+  the task list: text search, status filter, due-date range filter, sort, and pagination.
+- Q: How are the demo account's sample tasks provisioned? → A: In local development only, six
+  sample tasks are created when the demo account has no tasks at all (including deleted ones) and
+  are never modified afterwards.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -99,9 +111,16 @@ tasks, restore it, and verify it is back with its values unchanged.
    tasks.
 2. **Given** a deleted task, **When** I choose "Restore", **Then** it returns to my task list with
    the same title, description, status, and due date it had before deletion.
-3. **Given** a deleted task, **When** I try to edit it, **Then** the edit is refused until it is
-   restored.
-4. **Given** the delete confirmation, **When** I cancel, **Then** nothing changes.
+3. **Given** a deleted task of mine, **When** I open it from my deleted tasks, **Then** I see all
+   its details in read-only mode, clearly marked as deleted, with "Restore" as the only action and
+   no editing options.
+4. **Given** a deleted task of mine, **When** an edit is attempted anyway (for example from a tab
+   opened before the deletion), **Then** the edit is refused with a message to restore the task
+   first, and nothing changes.
+5. **Given** the delete confirmation, **When** I cancel, **Then** nothing changes.
+6. **Given** my deleted tasks, **When** I open the deleted-tasks list, **Then** the most recently
+   deleted tasks come first, each showing when it was deleted, and I can use the same search,
+   status filter, due-date range filter, sort, and paging as in the task list.
 
 ---
 
@@ -130,6 +149,13 @@ filter, sort, and paging each return the expected subset and order.
    across all pages.
 6. **Given** search and filter values, **When** I reload the page or share its address with
    myself in another tab, **Then** the same search, filter, sort, and page are applied.
+7. **Given** my tasks, **When** I filter by due dates from 2026-12-01 to 2026-12-31, **Then** I see
+   only tasks due within that range, both dates included; tasks without a due date are excluded.
+8. **Given** the due-date range filter, **When** the range spans more than 90 days, or the start
+   date is after the end date, **Then** the filter is not applied and a message explains the
+   allowed range (for example "Choose a range of at most 90 days.").
+9. **Given** the due-date range filter, **When** it is combined with search, status filter, sort,
+   and paging, **Then** all of them apply together.
 
 ---
 
@@ -140,12 +166,16 @@ filter, sort, and paging each return the expected subset and order.
 - A due date in the past is accepted; it is shown as overdue unless the task is "Done".
 - "Overdue" is evaluated against the person's local calendar date, so a task due today is not
   overdue.
+- A due-date range of exactly 90 days (for example 2026-01-01 to 2026-04-01) is accepted; one day
+  more is rejected. Only one end of the range given: the range filter requires both dates.
+- A due date outside 2000-01-01 to 2099-12-31 is rejected on create and edit with a field message.
 - Requesting a page beyond the last page returns an empty page with the correct total, not an
   error.
 - A search that matches nothing shows an empty state with a way to clear the search and filters.
 - An unknown status, sort field, or invalid page value in the request is rejected with a clear
   message (or, in the screen, reset to the default).
-- A task deleted in one tab and then edited in another: the edit is refused as described in US3.
+- A task deleted in one tab and then edited in another: the edit is refused with a message to
+  restore it first (US3, scenario 4).
 - Two edits of the same task from different tabs: the last saved values are kept (accepted).
 - A session that expires while editing: the person is sent to sign-in (feature 001) and unsaved
   changes are lost; this is accepted.
@@ -170,8 +200,9 @@ filter, sort, and paging each return the expected subset and order.
 - **FR-004**: A task MAY have a description of up to 2,000 characters.
 - **FR-005**: A task MUST have exactly one status among "To do", "In progress", and "Done"; new
   tasks default to "To do". Any status MAY change to any other.
-- **FR-006**: A task MAY have a due date, which is a calendar date without time; past dates are
-  allowed and the due date can be removed.
+- **FR-006**: A task MAY have a due date, which is a calendar date without time between 2000-01-01
+  and 2099-12-31 inclusive; past dates within that range are allowed and the due date can be
+  removed.
 - **FR-007**: The system MUST record when each task was created and last updated.
 - **FR-008**: Each invalid field MUST be reported individually, and nothing is saved when any
   field is invalid.
@@ -180,7 +211,8 @@ filter, sort, and paging each return the expected subset and order.
 
 - **FR-009**: People MUST be able to create a task with title (required) and optional description,
   status, and due date.
-- **FR-010**: People MUST be able to view the details of one of their tasks.
+- **FR-010**: People MUST be able to view the details of one of their tasks, including deleted
+  ones, which are shown read-only and marked as deleted.
 - **FR-011**: People MUST be able to change the title, description, status, and due date of one of
   their non-deleted tasks. When the same task is saved from two places, the last save wins.
 - **FR-012**: An unfinished task whose due date is earlier than the person's current local date
@@ -191,8 +223,12 @@ filter, sort, and paging each return the expected subset and order.
 - **FR-013**: People MUST be able to delete one of their tasks after confirming. A deleted task
   MUST no longer appear in the task list, search results, or counts.
 - **FR-014**: People MUST be able to list their deleted tasks and restore any of them; a restored
-  task keeps all the values it had before deletion.
-- **FR-015**: Deleted tasks MUST NOT be editable until restored.
+  task keeps all the values it had before deletion. The deleted-tasks list MUST offer the same
+  search, filters, sort options, and pagination as the task list (FR-016 to FR-019, FR-023), plus
+  sorting by deletion date, which is its default order (most recently deleted first).
+- **FR-015**: Deleted tasks MUST NOT be editable until restored: screens offer no editing options
+  for them, and any edit attempt is refused with an outcome distinct from "task not found" that
+  tells the owner to restore the task first.
 
 **Finding tasks**
 
@@ -203,8 +239,12 @@ filter, sort, and paging each return the expected subset and order.
   recently created first.
 - **FR-018**: The task list and the deleted-tasks list MUST be paginated, with a default page size
   of 20 and a maximum of 100, and MUST report the total number of matching tasks.
-- **FR-019**: The search, filter, sort, and page in use MUST be reflected in the screen address so
+- **FR-019**: The search, filters, sort, and page in use MUST be reflected in the screen address so
   that reloading keeps them.
+- **FR-023**: The task list MUST support filtering by a due-date range (start and end dates, both
+  required and inclusive). The range MUST NOT span more than the configured maximum, 90 days by
+  default; a longer or inverted range MUST be rejected with a clear message. The maximum MUST be
+  changeable by configuration, without code changes, and screens MUST use the configured value.
 
 **User experience**
 
@@ -251,5 +291,10 @@ filter, sort, and paging each return the expected subset and order.
 - "Last save wins" for concurrent edits is an accepted trade-off; there is no conflict detection.
 - Dates are stored without time zone; timestamps are recorded in UTC and shown in local time.
 - Text search is a simple "contains" match; no ranking, stemming, or accent folding.
-- Demo data: the demo account from feature 001 receives a few sample tasks in local development
-  only, so the list, statuses, and overdue marking can be shown immediately.
+- The maximum span of the due-date range filter is a deployment setting changed by whoever runs
+  the application, not by end users in the screens; changing it needs no new release.
+- Demo data: in local development only, the demo account from feature 001 receives six
+  sample tasks covering the three statuses, at least one overdue task, and at least one task
+  without a due date. They are created only when the demo account has no tasks at all (including
+  deleted ones) and are never changed afterwards, so restarts do not duplicate them or undo what
+  a presenter did.
