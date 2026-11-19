@@ -100,7 +100,7 @@ no `NEEDS CLARIFICATION` items remain. These decisions settle the design details
       direction; ties are broken by `createdAt desc`.
     - Deleted list: `deletedAt desc` (FR-014, FR-017).
   - **Stable paging:** every order ends with `Id` as a final tie-breaker.
-  - **Title sort:** case-insensitive using `lower(Title)`, which is ASCII-only, as for search.
+  - **Title sort:** case-insensitive using the SQLite `NOCASE` collation (`EF.Functions.Collate`), which is ASCII-only, as for search.
   - **Paging:** `page` starts at 1. `pageSize` defaults to 20 and must be between 1 and 100. A page
     beyond the end returns empty `items` with the real `totalCount` (Edge Cases).
   - **Response:** `PagedResult<T>` is `{ items, page, pageSize, totalCount }`.

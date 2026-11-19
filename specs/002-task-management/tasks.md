@@ -284,7 +284,7 @@ on its own.
 - [ ] T045 [US4] Complete `TaskRepository.ListAsync` in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T042 passes:
   - Search uses `EF.Functions.Like` with an escape character over `Title` and `Description`.
   - Filters for status and range.
-  - Sorting: `lower(Title)` for title, nulls-last ordering for the due date, and tie-breakers.
+  - Sorting: `NOCASE` collation for title, nulls-last ordering for the due date, and tie-breakers.
 - [ ] T046 [US4] Add `GET /api/tasks/settings` (declared before `{id:guid}`) to `src/TaskLane.Api/Tasks/TasksController.cs`, returning `TaskSettingsResponse(int DueDateRangeMaxDays)` from `src/TaskLane.Api/Tasks/TaskSettingsResponse.cs`, until T043 passes.
 - [ ] T047 [P] [US4] Write failing Vitest tests:
   - **`frontend/src/features/tasks/task-query.test.ts`:**

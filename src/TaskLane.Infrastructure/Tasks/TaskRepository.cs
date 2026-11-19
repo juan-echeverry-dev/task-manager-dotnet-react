@@ -26,7 +26,7 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
 
         var totalCount = await tasks.CountAsync(cancellationToken);
 
-        var items = await Order(tasks)
+        var items = await Order(tasks, query)
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
             .ToListAsync(cancellationToken);
@@ -45,11 +45,30 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    // Tasks without a due date always come last; ties go to the most recently created, then the id.
-    private static IOrderedQueryable<TaskItem> Order(IQueryable<TaskItem> tasks) =>
-        tasks
-            .OrderBy(task => task.DueDate == null)
-            .ThenBy(task => task.DueDate)
-            .ThenByDescending(task => task.CreatedAt)
-            .ThenBy(task => task.Id);
+    private static IOrderedQueryable<TaskItem> Order(IQueryable<TaskItem> tasks, TaskListQuery query)
+    {
+        var descending = query.Direction == TaskSortDirection.Descending;
+
+        var ordered = query.Sort switch
+        {
+            // Tasks without a due date always come last, whatever the direction.
+            TaskSortField.DueDate => descending
+                ? tasks.OrderBy(task => task.DueDate == null).ThenByDescending(task => task.DueDate)
+                : tasks.OrderBy(task => task.DueDate == null).ThenBy(task => task.DueDate),
+            TaskSortField.CreatedAt => descending
+                ? tasks.OrderByDescending(task => task.CreatedAt)
+                : tasks.OrderBy(task => task.CreatedAt),
+            // Case-insensitive for ASCII letters (SQLite NOCASE collation), as for search.
+            TaskSortField.Title => descending
+                ? tasks.OrderByDescending(task => EF.Functions.Collate(task.Title, "NOCASE"))
+                : tasks.OrderBy(task => EF.Functions.Collate(task.Title, "NOCASE")),
+            TaskSortField.DeletedAt => descending
+                ? tasks.OrderByDescending(task => task.DeletedAt)
+                : tasks.OrderBy(task => task.DeletedAt),
+            _ => throw new ArgumentOutOfRangeException(nameof(query), query.Sort, "Unknown sort field."),
+        };
+
+        // Ties go to the most recently created task, then the id, so paging is stable.
+        return ordered.ThenByDescending(task => task.CreatedAt).ThenBy(task => task.Id);
+    }
 }
