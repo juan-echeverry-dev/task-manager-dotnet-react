@@ -72,7 +72,7 @@ sequenceDiagram
 | Module | Purpose | Status |
 |---|---|---|
 | Identity | Registration, sign-in, JWT issuing, current-user profile, demo account | Implemented by [`specs/001-user-authentication`](../specs/001-user-authentication/spec.md) |
-| Business module(s) | Defined by future specs | Not started |
+| Tasks | Create, view, edit, soft-delete and restore one's own tasks; search, filters, sort and paging | Implemented by [`specs/002-task-management`](../specs/002-task-management/spec.md) |
 
 ### Identity module
 
@@ -109,6 +109,41 @@ message when `expiresAt` has passed.
 Modules interact only through public contracts (e.g. the authenticated user id claim). See
 [ADR 0003](adr/0003-identity-module-in-a-single-host.md).
 
+### Tasks module
+
+| Layer | Contents |
+|---|---|
+| Domain | `Tasks/TaskItem` (named to avoid `System.Threading.Tasks.Task`) and `TaskItemStatus`: invariants, any status transition, soft delete and restore |
+| Application | Port `ITaskRepository` with `TaskListQuery`; slices `CreateTask`, `GetTask`, `UpdateTask`, `DeleteTask`, `RestoreTask`, `ListTasks` (active or deleted); `TaskFieldRules` shared by the create and edit validators; `TaskListOptions` (configurable range limit) |
+| Infrastructure | `TaskRepository` (owner-scoped queries, `LIKE` search with escaping, filters, sort, paging), `TaskItemConfiguration` (FK to `Users` with cascade, UTC-tick timestamps, owner indexes), `DemoTasksSeeder` |
+| Api | `TasksController`: `GET/POST /api/tasks`, `GET /api/tasks/deleted`, `GET /api/tasks/settings`, `GET/PUT/DELETE /api/tasks/{id}`, `POST /api/tasks/{id}/restore` ([contract](../specs/002-task-management/contracts/tasks-api.md)) |
+
+**Module boundary**: Tasks knows a person only by the owner id taken from the `sub` claim
+(`ClaimsPrincipalExtensions.GetUserId`). `ModuleBoundaryTests` fails the build if Tasks types in
+Domain, Application or Api depend on Identity types. The only exception is the persistence
+configuration, which declares the foreign key from `Tasks.OwnerId` to `Users.Id`.
+
+**Ownership**: every repository query starts from the owner's tasks, so another person's task is
+indistinguishable from a missing one (the same 404 body). Editing a deleted task returns 409.
+
+List query flow:
+
+```mermaid
+sequenceDiagram
+    participant SPA as TaskListPage (URL state)
+    participant C as TasksController
+    participant V as ListTasksValidator
+    participant H as ListTasksHandler
+    participant R as TaskRepository
+    SPA->>C: GET /api/tasks?search=…&status=…&dueFrom=…&dueTo=…&sort=…&direction=…&page=…
+    C->>H: ListTasksQuery (raw text values, owner from sub)
+    H->>V: validate (range limit from TaskListOptions)
+    V-->>H: errors keyed by parameter → 400
+    H->>R: TaskListQuery (parsed, defaults applied)
+    R-->>H: page of the owner's tasks + total count
+    H-->>SPA: 200 { items, page, pageSize, totalCount }
+```
+
 ## Cross-cutting concerns
 
 | Concern | Approach |
@@ -118,7 +153,7 @@ Modules interact only through public contracts (e.g. the authenticated user id c
 | Validation | FluentValidation in Application; invariants in Domain |
 | Authentication | JWT bearer, authenticated-by-default fallback policy ([ADR 0006](adr/0006-jwt-bearer-authentication.md)) |
 | Time | `TimeProvider` injected; never `DateTime.UtcNow` in business code |
-| Configuration | `appsettings*.json` + user-secrets / environment variables for secrets |
+| Configuration | `appsettings*.json` + user-secrets / environment variables for secrets; validated on start (`ValidateOnStart`) |
 | Health | `GET /health` including a database check |
 | API docs | OpenAPI + Scalar in Development |
 
@@ -133,5 +168,7 @@ frontend/src/
 ```
 
 Server state is managed by TanStack Query; there is no global client store. The only client
-state shared across screens is the session (`features/auth/session`). See
+state shared across screens is the session (`features/auth/session`). The task lists keep their
+search, filters, sort and page in the address (`features/tasks/task-query.ts`), so reloading or
+sharing a link shows the same list. Any 401, from a query or a mutation, ends the session. See
 [ADR 0009](adr/0009-frontend-stack.md).

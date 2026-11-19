@@ -65,6 +65,33 @@ duplicated and its password is never reset):
 The credentials come from the `DemoAccount` section of `src/TaskLane.Api/appsettings.Development.json`.
 Other environments never create it.
 
+The demo account also receives **six sample tasks** (every status, one overdue task, one finished
+task with a past date, one task without a due date). They are created only while the account has
+no tasks at all, deleted ones included, so restarts never duplicate them or undo your changes.
+
+### Tasks
+
+Signed-in people manage their own tasks at `/tasks` (contract:
+[`tasks-api.md`](specs/002-task-management/contracts/tasks-api.md)):
+
+- Create, view, edit and delete tasks with a title, an optional description, a status (To do,
+  In progress, Done) and an optional due date. Unfinished tasks past their due date are marked
+  **Overdue**.
+- Deleting is reversible: deleted tasks appear under "Deleted tasks", read-only, and can be restored.
+- Both lists support search, a status filter, a due-date range filter, sorting and paging. The list
+  state lives in the address, so a reload or a shared link shows the same list.
+- Another person's task always answers "Task not found".
+
+The due-date range filter allows at most **90 days** by default. Change it without a new release
+with the `Tasks:DueDateRangeMaxDays` setting (1–3650), for example:
+
+```powershell
+$env:Tasks__DueDateRangeMaxDays = 30
+dotnet run --project src/TaskLane.Api --launch-profile http
+```
+
+The screens read the value from `GET /api/tasks/settings`. An invalid value stops the API at startup.
+
 ### Authentication
 
 - `POST /api/auth/register` and `POST /api/auth/sign-in` are anonymous; every other endpoint

@@ -3,8 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using TaskLane.Application.Identity.Ports;
+using TaskLane.Application.Tasks.Ports;
 using TaskLane.Infrastructure.Identity;
 using TaskLane.Infrastructure.Persistence;
+using TaskLane.Infrastructure.Tasks;
 
 namespace TaskLane.Infrastructure;
 
@@ -45,8 +47,11 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, PasswordHasherAdapter>();
         services.AddSingleton<IAccessTokenIssuer, JwtAccessTokenIssuer>();
 
+        services.AddScoped<ITaskRepository, TaskRepository>();
+
         services.AddOptions<DemoAccountOptions>().Bind(configuration.GetSection(DemoAccountOptions.SectionName));
         services.AddScoped<DemoAccountSeeder>();
+        services.AddScoped<DemoTasksSeeder>();
 
         return services;
     }

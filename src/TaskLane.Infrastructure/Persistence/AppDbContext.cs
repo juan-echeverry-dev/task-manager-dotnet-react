@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
 using TaskLane.Domain.Identity;
+using TaskLane.Domain.Tasks;
 
 namespace TaskLane.Infrastructure.Persistence;
 
@@ -11,6 +12,8 @@ namespace TaskLane.Infrastructure.Persistence;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<User> Users => Set<User>();
+
+    public DbSet<TaskItem> Tasks => Set<TaskItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

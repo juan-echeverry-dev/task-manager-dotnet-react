@@ -28,3 +28,58 @@ Content-Type: application/json
 ### Current user profile (requires the token)
 GET {{TaskLane.Api_HostAddress}}/api/users/me
 Authorization: Bearer {{token}}
+
+### Tasks: active list (search, status, dueFrom/dueTo, sort, direction, page, pageSize)
+GET {{TaskLane.Api_HostAddress}}/api/tasks?search=demo&sort=dueDate&page=1&pageSize=20
+Authorization: Bearer {{token}}
+
+### Tasks: due-date range (at most Tasks:DueDateRangeMaxDays days, 90 by default)
+GET {{TaskLane.Api_HostAddress}}/api/tasks?dueFrom=2026-12-01&dueTo=2026-12-31
+Authorization: Bearer {{token}}
+
+### Tasks: settings the screens need
+GET {{TaskLane.Api_HostAddress}}/api/tasks/settings
+Authorization: Bearer {{token}}
+
+### Tasks: create (only the title is required) and copy the id into @taskId
+POST {{TaskLane.Api_HostAddress}}/api/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Prepare demo",
+  "description": "Slides and seed data",
+  "status": "InProgress",
+  "dueDate": "2026-12-01"
+}
+
+###
+@taskId = paste-the-task-id-here
+
+### Tasks: one task (active or deleted)
+GET {{TaskLane.Api_HostAddress}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+
+### Tasks: replace the editable values (null description or dueDate clears it)
+PUT {{TaskLane.Api_HostAddress}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Prepare demo",
+  "description": null,
+  "status": "Done",
+  "dueDate": null
+}
+
+### Tasks: delete (soft, idempotent)
+DELETE {{TaskLane.Api_HostAddress}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+
+### Tasks: deleted list (same parameters; extra sort deletedAt, the default)
+GET {{TaskLane.Api_HostAddress}}/api/tasks/deleted
+Authorization: Bearer {{token}}
+
+### Tasks: restore (idempotent)
+POST {{TaskLane.Api_HostAddress}}/api/tasks/{{taskId}}/restore
+Authorization: Bearer {{token}}

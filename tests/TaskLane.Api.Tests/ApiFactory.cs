@@ -29,9 +29,18 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         $"Data Source=tasklane-tests-{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
 
     private readonly SqliteConnection _keepAliveConnection;
+    private readonly IReadOnlyDictionary<string, string?> _settings;
 
     public ApiFactory()
+        : this(new Dictionary<string, string?>())
     {
+    }
+
+    /// <summary>A factory with extra configuration values, for tests about configurable behavior.</summary>
+    internal ApiFactory(IReadOnlyDictionary<string, string?> settings)
+    {
+        _settings = settings;
+
         // A shared-cache in-memory database lives as long as one connection to it stays open.
         _keepAliveConnection = new SqliteConnection(_connectionString);
         _keepAliveConnection.Open();
@@ -52,6 +61,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Authentication:Jwt:Issuer", Issuer);
         builder.UseSetting("Authentication:Jwt:Audience", Audience);
         builder.UseSetting("Authentication:Jwt:SigningKey", SigningKey);
+        foreach (var (key, value) in _settings)
+        {
+            builder.UseSetting(key, value);
+        }
 
         builder.ConfigureTestServices(services =>
         {
