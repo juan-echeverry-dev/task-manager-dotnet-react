@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 using Scalar.AspNetCore;
 
 using TaskLane.Api.Identity;
@@ -13,7 +15,10 @@ builder.Services
     .AddInfrastructure(builder.Configuration);
 
 builder.Services.AddTokenAuthentication();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        // Enums travel by name ("ToDo"), never by number; DateOnly is already "yyyy-MM-dd".
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
