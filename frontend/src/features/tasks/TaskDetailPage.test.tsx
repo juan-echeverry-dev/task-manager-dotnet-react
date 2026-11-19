@@ -1,6 +1,7 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { jsonResponse, problemResponse, stubFetch } from '../../test/fetch'
+import { jsonResponse, problemResponse, stubFetch, type FetchHandler } from '../../test/fetch'
 import { renderApp } from '../../test/render'
 import { signedIn } from '../../test/session'
 import { formatDate, formatTimestamp } from './format'
@@ -86,5 +87,135 @@ describe('TaskDetailPage', () => {
     renderApp('/tasks/abc')
 
     expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't reach the service. Please try again.")
+  })
+
+  describe('deleting', () => {
+    function stubDelete(onDelete: FetchHandler = () => new Response(null, { status: 204 })) {
+      return stubFetch((url, init) => {
+        if (url === '/api/tasks/abc' && init?.method === 'DELETE') return onDelete(url, init)
+        if (url === '/api/tasks/abc') return jsonResponse(task)
+        if (url.startsWith('/api/tasks')) return jsonResponse({ items: [], page: 1, pageSize: 20, totalCount: 0 })
+        return new Response(null, { status: 404 })
+      })
+    }
+
+    async function openDialog() {
+      const user = userEvent.setup()
+      const result = renderApp('/tasks/abc')
+      await user.click(await screen.findByRole('button', { name: 'Delete' }))
+      return { ...result, user, dialog: screen.getByRole('dialog', { name: 'Delete task' }) }
+    }
+
+    it('asks for confirmation before deleting', async () => {
+      const fetchMock = stubDelete()
+      const { dialog } = await openDialog()
+
+      expect(dialog).toHaveAccessibleDescription('Delete this task? You can restore it from Deleted tasks.')
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(false)
+    })
+
+    it('deletes on confirm and returns to the list with a confirmation', async () => {
+      const fetchMock = stubDelete()
+      const { user, dialog, router } = await openDialog()
+
+      await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+      await waitFor(() => expect(router.state.location.pathname).toBe('/tasks'))
+      expect(await screen.findByText('Task deleted.')).toHaveAttribute('role', 'status')
+      const init = fetchMock.mock.calls.find(([, requestInit]) => requestInit?.method === 'DELETE')?.[1]
+      expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer token-123')
+    })
+
+    it('changes nothing when cancelled', async () => {
+      const fetchMock = stubDelete()
+      const { user, router } = await openDialog()
+
+      await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+      expect(router.state.location.pathname).toBe('/tasks/abc')
+      expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'DELETE')).toBe(false)
+    })
+
+    it('disables the confirm action while deleting', async () => {
+      stubDelete(() => new Promise<Response>(() => {}) as unknown as Response)
+      const { user, dialog } = await openDialog()
+
+      await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+      const confirm = await within(dialog).findByRole('button', { name: 'Deleting…' })
+      expect(confirm).toBeDisabled()
+      expect(confirm).toHaveAttribute('aria-busy', 'true')
+    })
+
+    it('shows the service message when deleting fails', async () => {
+      stubDelete(() => Promise.reject(new TypeError('Failed to fetch')) as unknown as Response)
+      const { user, dialog } = await openDialog()
+
+      await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
+
+      expect(await screen.findByRole('alert')).toHaveTextContent("We couldn't reach the service. Please try again.")
+    })
+  })
+
+  describe('a deleted task', () => {
+    const deleted = { ...task, deletedAt: '2026-11-17T10:00:00+00:00' }
+
+    function stubDeletedTask(onRestore: FetchHandler = () => jsonResponse({ ...task })) {
+      let restored = false
+      return stubFetch((url, init) => {
+        if (url === '/api/tasks/abc/restore' && init?.method === 'POST') {
+          restored = true
+          return onRestore(url, init)
+        }
+        if (url === '/api/tasks/abc') return jsonResponse(restored ? task : deleted)
+        return new Response(null, { status: 404 })
+      })
+    }
+
+    it('is read-only, marked as deleted, with Restore as the only action', async () => {
+      stubDeletedTask()
+      renderApp('/tasks/abc')
+
+      expect(await screen.findByText(`Deleted on ${formatTimestamp(deleted.deletedAt)}`)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Restore' })).toBeInTheDocument()
+      expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
+      expect(screen.queryByText('Overdue')).not.toBeInTheDocument()
+    })
+
+    it('can be restored and then shows the active detail with a confirmation', async () => {
+      const fetchMock = stubDeletedTask()
+      const user = userEvent.setup()
+      renderApp('/tasks/abc')
+
+      await user.click(await screen.findByRole('button', { name: 'Restore' }))
+
+      expect(await screen.findByText('Task restored.')).toHaveAttribute('role', 'status')
+      expect(await screen.findByRole('link', { name: 'Edit' })).toBeInTheDocument()
+      expect(screen.queryByText(/^Deleted on/)).not.toBeInTheDocument()
+      const init = fetchMock.mock.calls.find(([url]) => url === '/api/tasks/abc/restore')?.[1]
+      expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer token-123')
+    })
+
+    it('disables Restore while restoring', async () => {
+      stubDeletedTask(() => new Promise<Response>(() => {}) as unknown as Response)
+      const user = userEvent.setup()
+      renderApp('/tasks/abc')
+
+      await user.click(await screen.findByRole('button', { name: 'Restore' }))
+
+      const button = await screen.findByRole('button', { name: 'Restoring…' })
+      expect(button).toBeDisabled()
+      expect(button).toHaveAttribute('aria-busy', 'true')
+    })
+
+    it('shows the alert passed by an edit that was refused', async () => {
+      stubDeletedTask()
+      const { router } = renderApp('/tasks')
+      await router.navigate('/tasks/abc', { state: { alert: 'This task was deleted. Restore it to edit.' } })
+
+      expect(await screen.findByText('This task was deleted. Restore it to edit.')).toHaveAttribute('role', 'alert')
+    })
   })
 })
