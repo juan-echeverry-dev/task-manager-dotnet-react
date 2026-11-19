@@ -226,9 +226,9 @@ on its own.
 
 ### Implementation for User Story 3
 
-- [ ] T036 [US3] Implement `src/TaskLane.Application/Tasks/DeleteTask/` (`DeleteTaskCommand`, `DeleteTaskHandler` returning a non-generic `Result`) and `src/TaskLane.Application/Tasks/RestoreTask/` (`RestoreTaskCommand`, `RestoreTaskHandler`). Extend the ListTasks validator and handler with the deleted mode until T032 and T033 pass. Register them in DI.
+- [ ] T036 [US3] Implement `src/TaskLane.Application/Tasks/DeleteTask/` (`DeleteTaskCommand`, `DeleteTaskHandler` returning `Result<TaskResponse>`, mapped to 204 by the controller) and `src/TaskLane.Application/Tasks/RestoreTask/` (`RestoreTaskCommand`, `RestoreTaskHandler`). Extend the ListTasks validator and handler with the deleted mode until T032 and T033 pass. Register them in DI.
 - [ ] T037 [US3] Extend `TaskRepository.ListAsync` with the deleted mode and the `DeletedAt` sort in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T034 passes.
-- [ ] T038 [US3] Add `DELETE /api/tasks/{id:guid}`, `POST /api/tasks/{id:guid}/restore` and `GET /api/tasks/deleted` to `src/TaskLane.Api/Tasks/TasksController.cs`. Declare `deleted` before `{id:guid}` so the routes don't clash. Add the overload `ToActionResult(this Result result, Func<IActionResult> onSuccess)` to `src/TaskLane.Api/Common/ResultMappings.cs` for the 204 response. T035 must then pass (204 on success, 404 on error).
+- [ ] T038 [US3] Add `DELETE /api/tasks/{id:guid}`, `POST /api/tasks/{id:guid}/restore` and `GET /api/tasks/deleted` to `src/TaskLane.Api/Tasks/TasksController.cs`. Declare `deleted` before `{id:guid}` so the routes don't clash. `DELETE` maps success to `NoContent()` with the existing `ToActionResult<T>` (no new overload: `Result` has no non-generic success). T035 must then pass (204 on success, 404 on error).
 - [ ] T039 [P] [US3] Write failing Vitest tests:
   - **`frontend/src/shared/ui/ConfirmDialog.test.tsx`:**
     - opens as a modal dialog with a title, message, "Delete" and "Cancel";

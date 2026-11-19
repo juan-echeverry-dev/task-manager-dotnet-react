@@ -16,6 +16,9 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
     private Guid _owner;
     private Guid _otherOwner;
 
+    private static readonly TaskListQuery DeletedDefault =
+        TaskListQuery.Default with { Deleted = true, Sort = TaskSortField.DeletedAt, Direction = SortDirection.Descending };
+
     private static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
     public async ValueTask InitializeAsync()
@@ -109,6 +112,37 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
 
         page.Items.ShouldBeEmpty();
         page.TotalCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task ListAsync_DeletedList_ReturnsOnlyTheOwnersDeletedTasksMostRecentlyDeletedFirst()
+    {
+        var active = NewTask(_owner, "Active");
+        var deletedFirst = NewTask(_owner, "Deleted first");
+        var deletedLast = NewTask(_owner, "Deleted last");
+        var theirs = NewTask(_otherOwner, "Theirs");
+        deletedFirst.Delete(Now.AddHours(1));
+        deletedLast.Delete(Now.AddHours(2));
+        theirs.Delete(Now.AddHours(3));
+        await SaveAsync(active, deletedFirst, deletedLast, theirs);
+
+        var page = await ListAsync(DeletedDefault);
+
+        page.Items.Select(task => task.Title).ShouldBe(["Deleted last", "Deleted first"]);
+        page.TotalCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task ListAsync_ActiveListAndCount_ExcludeDeletedTasks()
+    {
+        var deleted = NewTask(_owner, "Deleted");
+        deleted.Delete(Now);
+        await SaveAsync(NewTask(_owner, "One"), NewTask(_owner, "Two"), deleted);
+
+        var page = await ListAsync(TaskListQuery.Default);
+
+        page.Items.Select(task => task.Title).ShouldNotContain("Deleted");
+        page.TotalCount.ShouldBe(2);
     }
 
     [Theory]

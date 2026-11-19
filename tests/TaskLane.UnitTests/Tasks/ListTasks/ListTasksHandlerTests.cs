@@ -43,6 +43,32 @@ public sealed class ListTasksHandlerTests
     }
 
     [Fact]
+    public async Task DeletedList_DefaultsToMostRecentlyDeletedFirst()
+    {
+        await _handler.HandleAsync(Active() with { Deleted = true }, TestContext.Current.CancellationToken);
+
+        await _tasks.Received(1).ListAsync(
+            OwnerId,
+            TaskListQuery.Default with { Deleted = true, Sort = TaskSortField.DeletedAt, Direction = SortDirection.Descending },
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("dueDate", TaskSortField.DueDate, SortDirection.Ascending)]
+    [InlineData("title", TaskSortField.Title, SortDirection.Ascending)]
+    [InlineData("createdAt", TaskSortField.CreatedAt, SortDirection.Descending)]
+    [InlineData("deletedAt", TaskSortField.DeletedAt, SortDirection.Descending)]
+    public async Task SortWithoutDirection_UsesTheFieldsDefaultDirection(string sort, TaskSortField field, SortDirection direction)
+    {
+        await _handler.HandleAsync(Active() with { Deleted = true, Sort = sort }, TestContext.Current.CancellationToken);
+
+        await _tasks.Received(1).ListAsync(
+            OwnerId,
+            TaskListQuery.Default with { Deleted = true, Sort = field, Direction = direction },
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task ReturnsThePageAsTaskResponses()
     {
         var task = TaskItem.Create(

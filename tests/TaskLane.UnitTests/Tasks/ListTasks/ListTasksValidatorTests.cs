@@ -48,6 +48,36 @@ public sealed class ListTasksValidatorTests
             .ShouldBe(["Page size must be between 1 and 100."]);
     }
 
+    [Theory]
+    [InlineData("dueDate")]
+    [InlineData("createdAt")]
+    [InlineData("title")]
+    public void Sort_KnownField_PassesInBothLists(string sort)
+    {
+        ErrorsFor(Active() with { Sort = sort }, "Sort").ShouldBeEmpty();
+        ErrorsFor(Active() with { Deleted = true, Sort = sort }, "Sort").ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Sort_DeletedAt_PassesOnlyInTheDeletedList()
+    {
+        ErrorsFor(Active() with { Deleted = true, Sort = "deletedAt" }, "Sort").ShouldBeEmpty();
+        ErrorsFor(Active() with { Sort = "deletedAt" }, "Sort")
+            .ShouldBe(["Sort must be one of: dueDate, createdAt, title."]);
+    }
+
+    [Theory]
+    [InlineData("DueDate")]
+    [InlineData("priority")]
+    [InlineData("")]
+    public void Sort_Unknown_IsRejectedWithTheFieldsOfThatList(string sort)
+    {
+        ErrorsFor(Active() with { Sort = sort }, "Sort")
+            .ShouldBe(["Sort must be one of: dueDate, createdAt, title."]);
+        ErrorsFor(Active() with { Deleted = true, Sort = sort }, "Sort")
+            .ShouldBe(["Sort must be one of: dueDate, createdAt, title, deletedAt."]);
+    }
+
     private string[] ErrorsFor(ListTasksQuery query, string propertyName) =>
         [.. _validator.Validate(query).Errors
             .Where(error => error.PropertyName == propertyName)
