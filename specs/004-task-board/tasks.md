@@ -193,7 +193,7 @@ follow the spec's priorities:
 
 ### Tests for User Story 3 (write first, must fail)
 
-- [ ] T020 [US3] Create `features/tasks/NewTaskPanel.test.tsx` by moving the cases of `NewTaskPage.test.tsx` onto `/tasks/new`:
+- [X] T020 [US3] Create `features/tasks/NewTaskPanel.test.tsx` by moving the cases of `NewTaskPage.test.tsx` onto `/tasks/new`:
   - The dialog is named "New task" and its status defaults to "To do".
   - `/tasks/new?status=InProgress` presets "In progress", and an invalid `status` falls back to "To do".
   - Creating posts the values, then shows `/tasks/<id>` with "Task created.", and the card appears in its column.
@@ -204,12 +204,12 @@ follow the spec's priorities:
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Create `features/tasks/NewTaskPanel.tsx` from `NewTaskPage.tsx`:
+- [X] T021 [US3] Create `features/tasks/NewTaskPanel.tsx` from `NewTaskPage.tsx`:
   - An `<h2 id={titleId}>New task</h2>`.
   - `TaskForm` with `defaultValues = { ...EMPTY_TASK_FORM, status: preset }`, where `preset` is read from `?status`, validated against `TASK_STATUSES`, and defaults to `ToDo`.
   - On success it navigates to `boardHref('/tasks/<id>', boardSearchFrom(location.search))` with "Task created.", so the `status` preset parameter is dropped.
   - Delete `NewTaskPage.tsx` and `NewTaskPage.test.tsx`.
-- [ ] T022 [US3] Add the "+" link (`aria-label="New task in <name>"`) to the column header in `features/tasks/BoardColumn.tsx`. Move `new` under the `TaskPanel` children in `app/routes.tsx`, before `:id`. T020 passes
+- [X] T022 [US3] Add the "+" link (`aria-label="New task in <name>"`) to the column header in `features/tasks/BoardColumn.tsx`. Move `new` under the `TaskPanel` children in `app/routes.tsx`, before `:id`. T020 passes
 
 **Checkpoint**: All task screens live in the board and panel.
 

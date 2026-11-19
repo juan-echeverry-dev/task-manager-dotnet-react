@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { Link } from 'react-router'
 import { ApiError } from '../../shared/api/http-client'
 import { STATUS_LABELS } from './format'
 import { taskMessages } from './messages'
@@ -31,9 +32,18 @@ export function BoardColumn({ status, column, search, today }: BoardColumnProps)
           <span aria-hidden="true" className={`size-2.5 rounded-full ${styles.dot}`} />
           {label}
         </h2>
-        {column.totalCount !== undefined ? (
-          <span className="text-xs font-medium text-slate-600">{countLabel(column.totalCount)}</span>
-        ) : null}
+        <div className="flex items-center gap-2">
+          {column.totalCount !== undefined ? (
+            <span className="text-xs font-medium text-slate-600">{countLabel(column.totalCount)}</span>
+          ) : null}
+          <Link
+            to={`/tasks/new?status=${status}${search ? `&${search.slice(1)}` : ''}`}
+            aria-label={`New task in ${label}`}
+            className="flex size-6 items-center justify-center rounded-md text-base leading-none font-semibold text-slate-600 hover:bg-white hover:text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600"
+          >
+            <span aria-hidden="true">+</span>
+          </Link>
+        </div>
       </header>
 
       <div className="flex-1 space-y-3 p-3">

@@ -5,7 +5,7 @@ import { RequireAuth } from '../features/auth/RequireAuth'
 import { SignInPage } from '../features/auth/SignInPage'
 import { ProfilePage } from '../features/profile/ProfilePage'
 import { EditTaskPanel } from '../features/tasks/EditTaskPanel'
-import { NewTaskPage } from '../features/tasks/NewTaskPage'
+import { NewTaskPanel } from '../features/tasks/NewTaskPanel'
 import { TaskBoardPage } from '../features/tasks/TaskBoardPage'
 import { TaskDetailPanel } from '../features/tasks/TaskDetailPanel'
 import { TaskPanel } from '../features/tasks/TaskPanel'
@@ -38,13 +38,13 @@ export const routes: RouteObject[] = [
               {
                 element: <TaskPanel />,
                 children: [
+                  { path: 'new', element: <NewTaskPanel /> },
                   { path: ':id', element: <TaskDetailPanel /> },
                   { path: ':id/edit', element: <EditTaskPanel /> },
                 ],
               },
             ],
           },
-          { path: 'tasks/new', element: <NewTaskPage /> },
         ],
       },
       { path: '*', element: <NotFoundPage /> },
