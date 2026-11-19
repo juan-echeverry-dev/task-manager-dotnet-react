@@ -69,7 +69,8 @@ describe('TaskDetailPage', () => {
     const { router } = renderApp('/tasks')
     await router.navigate('/tasks/abc', { state: { status: 'Task created.' } })
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Task created.')
+    // The layout's API indicator is also a status region, so find the message by its text.
+    expect(await screen.findByText('Task created.')).toHaveAttribute('role', 'status')
   })
 
   it('shows "Task not found" with a link back to the list on 404', async () => {
