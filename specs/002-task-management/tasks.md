@@ -58,12 +58,12 @@ on its own.
   - Private setters and a private parameterless constructor for EF Core.
   - `IsDeleted`.
   - Constants `TitleMaxLength = 200`, `DescriptionMaxLength = 2000`, `MinDueDate = new DateOnly(2000, 1, 1)`, `MaxDueDate = new DateOnly(2099, 12, 31)`.
-- [ ] T005 [P] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/TaskPersistenceTests.cs`, using the `SqliteDatabase` helper:
+- [X] T005 [P] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/TaskPersistenceTests.cs`, using the `SqliteDatabase` helper:
   - A saved task round-trips all nine fields (`DueDate` as a date, timestamps exactly).
   - Saving a task whose `OwnerId` has no matching user throws `DbUpdateException` (foreign key).
   - Deleting the owning `User` row cascades to its tasks.
   - Ordering by `CreatedAt` and `DeletedAt` works in a LINQ query (proves the converter).
-- [ ] T006 Create `src/TaskLane.Infrastructure/Persistence/Configurations/TaskItemConfiguration.cs`, then add the migration with `dotnet ef migrations add AddTasks --project src/TaskLane.Infrastructure --startup-project src/TaskLane.Api --output-dir Persistence/Migrations`. T005 must then pass. Configuration:
+- [X] T006 Create `src/TaskLane.Infrastructure/Persistence/Configurations/TaskItemConfiguration.cs`, then add the migration with `dotnet ef migrations add AddTasks --project src/TaskLane.Infrastructure --startup-project src/TaskLane.Api --output-dir Persistence/Migrations`. T005 must then pass. Configuration:
   - Table `Tasks`; `Id` with `ValueGeneratedNever`.
   - `OwnerId` required, with `HasOne<User>().WithMany().HasForeignKey(t => t.OwnerId).OnDelete(DeleteBehavior.Cascade)`.
   - `Title` "NOT NULL, max 200"; `Description` "NULL, max 2000"; `Status` stored as a string, max 20.

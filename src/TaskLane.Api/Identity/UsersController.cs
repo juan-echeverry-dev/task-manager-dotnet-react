@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.JsonWebTokens;
 
 using TaskLane.Api.Common;
 using TaskLane.Application.Identity.GetProfile;
@@ -21,7 +20,7 @@ public sealed class UsersController : ControllerBase
         ArgumentNullException.ThrowIfNull(handler);
 
         // The token is validated by then; a subject that is not a user id is still not a session.
-        if (!Guid.TryParse(User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value, out var userId))
+        if (User.GetUserId() is not { } userId)
         {
             return Problem(
                 title: "Authentication required",
