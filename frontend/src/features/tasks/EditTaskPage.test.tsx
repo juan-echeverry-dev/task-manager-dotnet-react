@@ -116,27 +116,4 @@ describe('EditTaskPage', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/tasks'))
     expect(router.state.location.state).toEqual({ alert: 'This task no longer exists.' })
   })
-
-  it('returns to the read-only detail when the task was deleted meanwhile', async () => {
-    stubTaskApi(() => problemResponse(409, { title: 'Task is deleted', detail: 'Restore the task before editing it.' }))
-    const { user, router } = await openForm()
-
-    await user.click(screen.getByRole('button', { name: 'Save changes' }))
-
-    await waitFor(() => expect(router.state.location.pathname).toBe('/tasks/abc'))
-    expect(router.state.location.state).toEqual({ alert: 'This task was deleted. Restore it to edit.' })
-  })
-
-  it('redirects to the detail when the task is already deleted', async () => {
-    stubFetch((url) =>
-      url === '/api/tasks/abc'
-        ? jsonResponse({ ...task, deletedAt: '2026-11-17T10:00:00+00:00' })
-        : new Response(null, { status: 404 }),
-    )
-    signedIn()
-    const { router } = renderApp('/tasks/abc/edit')
-
-    await waitFor(() => expect(router.state.location.pathname).toBe('/tasks/abc'))
-    expect(screen.queryByRole('heading', { name: 'Edit task' })).not.toBeInTheDocument()
-  })
 })

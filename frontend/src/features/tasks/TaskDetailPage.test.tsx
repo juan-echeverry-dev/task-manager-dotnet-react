@@ -63,6 +63,7 @@ describe('TaskDetailPage', () => {
 
     expect(await screen.findByRole('link', { name: 'Edit' })).toHaveAttribute('href', '/tasks/abc/edit')
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Restore' })).not.toBeInTheDocument()
   })
 
   it('shows the status message passed by the previous screen', async () => {
@@ -168,64 +169,4 @@ describe('TaskDetailPage', () => {
     })
   })
 
-  describe('a deleted task', () => {
-    const deleted = { ...task, deletedAt: '2026-11-17T10:00:00+00:00' }
-
-    function stubDeletedTask(onRestore: FetchHandler = () => jsonResponse({ ...task })) {
-      let restored = false
-      return stubFetch((url, init) => {
-        if (url === '/api/tasks/abc/restore' && init?.method === 'POST') {
-          restored = true
-          return onRestore(url, init)
-        }
-        if (url === '/api/tasks/abc') return jsonResponse(restored ? task : deleted)
-        return new Response(null, { status: 404 })
-      })
-    }
-
-    it('is read-only, marked as deleted, with Restore as the only action', async () => {
-      stubDeletedTask()
-      renderApp('/tasks/abc')
-
-      expect(await screen.findByText(`Deleted on ${formatTimestamp(deleted.deletedAt)}`)).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Restore' })).toBeInTheDocument()
-      expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument()
-      expect(screen.queryByText('Overdue')).not.toBeInTheDocument()
-    })
-
-    it('can be restored and then shows the active detail with a confirmation', async () => {
-      const fetchMock = stubDeletedTask()
-      const user = userEvent.setup()
-      renderApp('/tasks/abc')
-
-      await user.click(await screen.findByRole('button', { name: 'Restore' }))
-
-      expect(await screen.findByText('Task restored.')).toHaveAttribute('role', 'status')
-      expect(await screen.findByRole('link', { name: 'Edit' })).toBeInTheDocument()
-      expect(screen.queryByText(/^Deleted on/)).not.toBeInTheDocument()
-      const init = fetchMock.mock.calls.find(([url]) => url === '/api/tasks/abc/restore')?.[1]
-      expect(new Headers(init?.headers).get('Authorization')).toBe('Bearer token-123')
-    })
-
-    it('disables Restore while restoring', async () => {
-      stubDeletedTask(() => new Promise<Response>(() => {}) as unknown as Response)
-      const user = userEvent.setup()
-      renderApp('/tasks/abc')
-
-      await user.click(await screen.findByRole('button', { name: 'Restore' }))
-
-      const button = await screen.findByRole('button', { name: 'Restoring…' })
-      expect(button).toBeDisabled()
-      expect(button).toHaveAttribute('aria-busy', 'true')
-    })
-
-    it('shows the alert passed by an edit that was refused', async () => {
-      stubDeletedTask()
-      const { router } = renderApp('/tasks')
-      await router.navigate('/tasks/abc', { state: { alert: 'This task was deleted. Restore it to edit.' } })
-
-      expect(await screen.findByText('This task was deleted. Restore it to edit.')).toHaveAttribute('role', 'alert')
-    })
-  })
 })

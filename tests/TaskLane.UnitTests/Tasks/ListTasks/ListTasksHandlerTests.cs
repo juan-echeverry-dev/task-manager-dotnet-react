@@ -25,7 +25,7 @@ public sealed class ListTasksHandlerTests
     }
 
     private static ListTasksQuery Active() =>
-        new(OwnerId, Deleted: false, null, null, null, null, null, null, null, null);
+        new(OwnerId, null, null, null, null, null, null, null, null);
 
     [Fact]
     public async Task NoParameters_UsesTheDefaultQueryForTheOwner()
@@ -44,29 +44,17 @@ public sealed class ListTasksHandlerTests
             OwnerId, TaskListQuery.Default with { Page = 3, PageSize = 10 }, Arg.Any<CancellationToken>());
     }
 
-    [Fact]
-    public async Task DeletedList_DefaultsToMostRecentlyDeletedFirst()
-    {
-        await _handler.HandleAsync(Active() with { Deleted = true }, TestContext.Current.CancellationToken);
-
-        await _tasks.Received(1).ListAsync(
-            OwnerId,
-            TaskListQuery.Default with { Deleted = true, Sort = TaskSortField.DeletedAt, Direction = TaskSortDirection.Descending },
-            Arg.Any<CancellationToken>());
-    }
-
     [Theory]
     [InlineData("dueDate", TaskSortField.DueDate, TaskSortDirection.Ascending)]
     [InlineData("title", TaskSortField.Title, TaskSortDirection.Ascending)]
     [InlineData("createdAt", TaskSortField.CreatedAt, TaskSortDirection.Descending)]
-    [InlineData("deletedAt", TaskSortField.DeletedAt, TaskSortDirection.Descending)]
     public async Task SortWithoutDirection_UsesTheFieldsDefaultDirection(string sort, TaskSortField field, TaskSortDirection direction)
     {
-        await _handler.HandleAsync(Active() with { Deleted = true, Sort = sort }, TestContext.Current.CancellationToken);
+        await _handler.HandleAsync(Active() with { Sort = sort }, TestContext.Current.CancellationToken);
 
         await _tasks.Received(1).ListAsync(
             OwnerId,
-            TaskListQuery.Default with { Deleted = true, Sort = field, Direction = direction },
+            TaskListQuery.Default with { Sort = field, Direction = direction },
             Arg.Any<CancellationToken>());
     }
 
