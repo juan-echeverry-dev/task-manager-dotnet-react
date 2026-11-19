@@ -52,7 +52,7 @@ stateDiagram-v2
 | `Description` | TEXT | NULL, max 2000 |
 | `Status` | TEXT | NOT NULL, max 20 (enum stored as its name) |
 | `DueDate` | TEXT | NULL (`yyyy-MM-dd`) |
-| `CreatedAt` | INTEGER | NOT NULL (`DateTimeOffsetToBinaryConverter`) |
+| `CreatedAt` | INTEGER | NOT NULL (UTC ticks, `UtcTicksConverter`) |
 | `UpdatedAt` | INTEGER | NOT NULL (same converter) |
 | `DeletedAt` | INTEGER | NULL (same converter) |
 

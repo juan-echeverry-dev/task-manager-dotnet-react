@@ -37,8 +37,8 @@ on its own.
 
 **Purpose**: Configuration needed before any test can be written.
 
-- [ ] T001 Add `<PackageVersion Include="Microsoft.Extensions.Options" Version="$(DotNetPackagesVersion)" />` to `Directory.Packages.props` and reference it from `src/TaskLane.Application/TaskLane.Application.csproj`. Then run `dotnet build TaskLane.slnx`: 0 warnings.
-- [ ] T002 [P] Add `"Tasks": { "DueDateRangeMaxDays": 90 }` to `src/TaskLane.Api/appsettings.json`. This is configuration only and is exempt from test-first.
+- [X] T001 Add `<PackageVersion Include="Microsoft.Extensions.Options" Version="$(DotNetPackagesVersion)" />` to `Directory.Packages.props` and reference it from `src/TaskLane.Application/TaskLane.Application.csproj`. Then run `dotnet build TaskLane.slnx`: 0 warnings.
+- [X] T002 [P] Add `"Tasks": { "DueDateRangeMaxDays": 90 }` to `src/TaskLane.Api/appsettings.json`. This is configuration only and is exempt from test-first.
 
 ---
 
@@ -48,13 +48,13 @@ on its own.
 
 **⚠️ CRITICAL**: No user story work begins until this phase is complete.
 
-- [ ] T003 [P] Write failing unit tests in `tests/TaskLane.UnitTests/Tasks/TaskItemTests.cs` for `TaskItem.Create(id, ownerId, title, description, status, dueDate, now)`:
+- [X] T003 [P] Write failing unit tests in `tests/TaskLane.UnitTests/Tasks/TaskItemTests.cs` for `TaskItem.Create(id, ownerId, title, description, status, dueDate, now)`:
   - **Defaults and normalization:** title trimmed; a description that is empty or only whitespace becomes `null`; `Status` defaults to `ToDo` when null is passed; `UpdatedAt == CreatedAt == now`; `DeletedAt == null`.
   - **Limits:** title "1–200 chars" after trim; description "≤ 2,000 chars"; due date "2000-01-01 … 2099-12-31 inclusive", with both bounds accepted and one day outside each bound rejected.
   - **`ArgumentException`** for: empty id, empty owner id, empty or whitespace title, any length or date out of range, and non-UTC `now`.
   - **`Update(title, description, status, dueDate, now)`:** replaces the four values, allows any status transition (including `Done → ToDo`), and sets `UpdatedAt = now`. It throws `InvalidOperationException` when the task is deleted.
   - **`Delete(now)`:** sets `DeletedAt`, and does nothing when called again. **`Restore()`:** clears `DeletedAt` and keeps `UpdatedAt`; does nothing when the task is active.
-- [ ] T004 Implement `TaskItemStatus` (`ToDo`, `InProgress`, `Done`) in `src/TaskLane.Domain/Tasks/TaskItemStatus.cs` and the sealed `TaskItem` in `src/TaskLane.Domain/Tasks/TaskItem.cs` until T003 passes:
+- [X] T004 Implement `TaskItemStatus` (`ToDo`, `InProgress`, `Done`) in `src/TaskLane.Domain/Tasks/TaskItemStatus.cs` and the sealed `TaskItem` in `src/TaskLane.Domain/Tasks/TaskItem.cs` until T003 passes:
   - Private setters and a private parameterless constructor for EF Core.
   - `IsDeleted`.
   - Constants `TitleMaxLength = 200`, `DescriptionMaxLength = 2000`, `MinDueDate = new DateOnly(2000, 1, 1)`, `MaxDueDate = new DateOnly(2099, 12, 31)`.
@@ -68,7 +68,7 @@ on its own.
   - `OwnerId` required, with `HasOne<User>().WithMany().HasForeignKey(t => t.OwnerId).OnDelete(DeleteBehavior.Cascade)`.
   - `Title` "NOT NULL, max 200"; `Description` "NULL, max 2000"; `Status` stored as a string, max 20.
   - `DueDate` nullable.
-  - `CreatedAt`, `UpdatedAt` and `DeletedAt` with `DateTimeOffsetToBinaryConverter`.
+  - `CreatedAt`, `UpdatedAt` and `DeletedAt` with `UtcTicksConverter` (UTC ticks; see research R6).
   - Indexes `IX_Tasks_OwnerId_DeletedAt_DueDate` and `IX_Tasks_OwnerId_DeletedAt_CreatedAt`.
   - Expose `DbSet<TaskItem> Tasks` in `src/TaskLane.Infrastructure/Persistence/AppDbContext.cs`.
 - [ ] T007 [P] Write failing unit tests in `tests/TaskLane.Api.Tests/ClaimsPrincipalExtensionsTests.cs`: `GetUserId()` returns the Guid in the `sub` claim, and returns `null` when the claim is missing or is not a Guid.

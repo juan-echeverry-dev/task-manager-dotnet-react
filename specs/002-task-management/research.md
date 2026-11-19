@@ -70,10 +70,12 @@ no `NEEDS CLARIFICATION` items remain. These decisions settle the design details
 ## R6. Timestamps and ordering on SQLite
 
 - **Decision**: `CreatedAt`, `UpdatedAt` and `DeletedAt` are `DateTimeOffset` in the domain. On the
-  `Tasks` table they are stored with EF Core's `DateTimeOffsetToBinaryConverter`, as INTEGER.
+  `Tasks` table they are stored as their UTC tick count (INTEGER) through a small `UtcTicksConverter`.
 - **Rationale**: EF Core's SQLite provider cannot `ORDER BY` a `DateTimeOffset` stored as TEXT (ADR
   0004 notes this), and the lists must sort by creation and deletion date. All values are UTC, so
-  the binary form orders correctly.
+  ticks order correctly and round-trip exactly.
+  EF Core's `DateTimeOffsetToBinaryConverter` was the first choice, but it drops precision below
+  0.1 ms, so a task read back would differ from the one just returned by create.
 - **Alternatives**: Sorting by the v7 `Id` as a creation-time proxy would not work for deletion
   date and is implicit.
 
