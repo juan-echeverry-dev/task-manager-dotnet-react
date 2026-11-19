@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defaultTaskQuery, type TaskQuery } from './task-query'
@@ -39,12 +39,12 @@ describe('TaskFilters', () => {
   })
 
   it('applies the search after the person stops typing for 300 ms', async () => {
-    vi.useFakeTimers()
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     const onChange = vi.fn()
     render(<TaskFilters query={defaultTaskQuery('active')} mode="active" maxRangeDays={90} onChange={onChange} />)
-    const user = userEvent.setup({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) })
-
-    await user.type(screen.getByLabelText('Search'), 'demo')
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'dem' } })
+    act(() => vi.advanceTimersByTime(200))
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'demo' } })
     act(() => vi.advanceTimersByTime(299))
     expect(onChange).not.toHaveBeenCalled()
 
