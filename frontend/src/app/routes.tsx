@@ -31,6 +31,7 @@ export const routes: RouteObject[] = [
           { path: 'profile', element: <ProfilePage /> },
           { path: 'tasks', element: <TaskListPage /> },
           { path: 'tasks/new', element: <NewTaskPage /> },
+          { path: 'tasks/deleted', element: <TaskListPage mode="deleted" /> },
           { path: 'tasks/:id', element: <TaskDetailPage /> },
           { path: 'tasks/:id/edit', element: <EditTaskPage /> },
         ],

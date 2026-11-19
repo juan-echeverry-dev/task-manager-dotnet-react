@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useNavigate, useParams } from 'react-router'
+import { ApiError } from '../../shared/api/http-client'
 import { taskMessages, type TaskStatusState } from './messages'
 import type { TaskFormValues } from './schemas'
 import { TaskForm } from './TaskForm'
@@ -7,7 +8,7 @@ import { TaskNotFound } from './TaskNotFound'
 import { updateTask, type Task, type TaskInput } from './tasks-api'
 import { useTask } from './useTask'
 
-/** Edit screen (spec US2). Rendered only inside RequireAuth. */
+/** Edit screen (spec US2, FR-015). Rendered only inside RequireAuth. */
 export function EditTaskPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
@@ -16,12 +17,23 @@ export function EditTaskPage() {
   const mutation = useMutation({ mutationFn: (input: TaskInput) => updateTask(id, input, task.accessToken) })
 
   if (task.notFound) return <TaskNotFound />
+  // A deleted task is read-only: its detail explains how to restore it.
+  if (task.data?.deletedAt) return <Navigate to={`/tasks/${id}`} replace />
 
   const save = async (input: TaskInput) => {
     await mutation.mutateAsync(input)
     await queryClient.invalidateQueries({ queryKey: ['tasks'] })
     const state: TaskStatusState = { status: taskMessages.updated }
     await navigate(`/tasks/${id}`, { state })
+  }
+
+  // Deleted in another tab after this form was opened (409).
+  const handleError = (error: unknown) => {
+    if (!(error instanceof ApiError && error.status === 409)) return false
+    // Leave first: refreshing the task here would redirect without the explanation.
+    const state: TaskStatusState = { alert: taskMessages.deletedRestoreToEdit }
+    void Promise.resolve(navigate(`/tasks/${id}`, { state })).then(() => queryClient.invalidateQueries({ queryKey: ['tasks'] }))
+    return true
   }
 
   return (
@@ -48,6 +60,7 @@ export function EditTaskPage() {
           submitLabel="Save changes"
           pendingLabel="Saving…"
           onSubmit={save}
+          onError={handleError}
         />
       ) : null}
     </section>

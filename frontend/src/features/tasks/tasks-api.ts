@@ -53,8 +53,20 @@ export function updateTask(id: string, input: TaskInput, accessToken: string): P
   )
 }
 
+export function deleteTask(id: string, accessToken: string): Promise<void> {
+  return request<void>(`/api/tasks/${encodeURIComponent(id)}`, { method: 'DELETE' }, { accessToken })
+}
+
+export function restoreTask(id: string, accessToken: string): Promise<Task> {
+  return request<Task>(`/api/tasks/${encodeURIComponent(id)}/restore`, { method: 'POST' }, { accessToken })
+}
+
 export function listTasks(params: ListTasksParams, accessToken: string): Promise<TaskPage> {
   return request<TaskPage>(withQuery('/api/tasks', params), {}, { accessToken })
+}
+
+export function listDeletedTasks(params: ListTasksParams, accessToken: string): Promise<TaskPage> {
+  return request<TaskPage>(withQuery('/api/tasks/deleted', params), {}, { accessToken })
 }
 
 function withQuery(path: string, params: ListTasksParams): string {
