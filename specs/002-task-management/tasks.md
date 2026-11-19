@@ -208,15 +208,15 @@ on its own.
 
 ### Tests for User Story 3 (write first, must fail)
 
-- [ ] T032 [P] [US3] Write failing unit tests in `tests/TaskLane.UnitTests/Tasks/DeleteTask/DeleteTaskHandlerTests.cs` and `tests/TaskLane.UnitTests/Tasks/RestoreTask/RestoreTaskHandlerTests.cs`:
+- [X] T032 [P] [US3] Write failing unit tests in `tests/TaskLane.UnitTests/Tasks/DeleteTask/DeleteTaskHandlerTests.cs` and `tests/TaskLane.UnitTests/Tasks/RestoreTask/RestoreTaskHandlerTests.cs`:
   - Delete: sets `DeletedAt = now` and saves; already deleted → success with no change.
   - Restore: clears `DeletedAt`, keeps `UpdatedAt`, returns `TaskResponse`; already active → success.
   - Both: missing → `Error.NotFound`.
-- [ ] T033 [P] [US3] Extend `tests/TaskLane.UnitTests/Tasks/ListTasks/ListTasksValidatorTests.cs` (failing first): when `Deleted = true`, `sort` accepts `deletedAt` and defaults to `deletedAt desc`; when `Deleted = false`, `sort=deletedAt` is rejected with "Sort must be one of: dueDate, createdAt, title.".
-- [ ] T034 [P] [US3] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs`:
+- [X] T033 [P] [US3] Extend `tests/TaskLane.UnitTests/Tasks/ListTasks/ListTasksValidatorTests.cs` (failing first): when `Deleted = true`, `sort` accepts `deletedAt` and defaults to `deletedAt desc`; when `Deleted = false`, `sort=deletedAt` is rejected with "Sort must be one of: dueDate, createdAt, title.".
+- [X] T034 [P] [US3] Write failing Infrastructure tests in `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs`:
   - `ListAsync` with `Deleted = true` returns only the owner's deleted tasks, in `DeletedAt desc` order by default.
   - Active lists and counts exclude deleted tasks (FR-013).
-- [ ] T035 [P] [US3] Write failing API tests in `tests/TaskLane.Api.Tests/Tasks/DeleteAndRestoreTaskTests.cs`:
+- [X] T035 [P] [US3] Write failing API tests in `tests/TaskLane.Api.Tests/Tasks/DeleteAndRestoreTaskTests.cs`:
   - `DELETE` → 204, and a second `DELETE` → 204.
   - The task is gone from `GET /api/tasks` and listed in `GET /api/tasks/deleted` with `deletedAt`.
   - `GET /api/tasks/{id}` still 200 with `deletedAt` set.
@@ -226,10 +226,10 @@ on its own.
 
 ### Implementation for User Story 3
 
-- [ ] T036 [US3] Implement `src/TaskLane.Application/Tasks/DeleteTask/` (`DeleteTaskCommand`, `DeleteTaskHandler` returning `Result<TaskResponse>`, mapped to 204 by the controller) and `src/TaskLane.Application/Tasks/RestoreTask/` (`RestoreTaskCommand`, `RestoreTaskHandler`). Extend the ListTasks validator and handler with the deleted mode until T032 and T033 pass. Register them in DI.
-- [ ] T037 [US3] Extend `TaskRepository.ListAsync` with the deleted mode and the `DeletedAt` sort in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T034 passes.
-- [ ] T038 [US3] Add `DELETE /api/tasks/{id:guid}`, `POST /api/tasks/{id:guid}/restore` and `GET /api/tasks/deleted` to `src/TaskLane.Api/Tasks/TasksController.cs`. Declare `deleted` before `{id:guid}` so the routes don't clash. `DELETE` maps success to `NoContent()` with the existing `ToActionResult<T>` (no new overload: `Result` has no non-generic success). T035 must then pass (204 on success, 404 on error).
-- [ ] T039 [P] [US3] Write failing Vitest tests:
+- [X] T036 [US3] Implement `src/TaskLane.Application/Tasks/DeleteTask/` (`DeleteTaskCommand`, `DeleteTaskHandler` returning `Result<TaskResponse>`, mapped to 204 by the controller) and `src/TaskLane.Application/Tasks/RestoreTask/` (`RestoreTaskCommand`, `RestoreTaskHandler`). Extend the ListTasks validator and handler with the deleted mode until T032 and T033 pass. Register them in DI.
+- [X] T037 [US3] Extend `TaskRepository.ListAsync` with the deleted mode and the `DeletedAt` sort in `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs` until T034 passes.
+- [X] T038 [US3] Add `DELETE /api/tasks/{id:guid}`, `POST /api/tasks/{id:guid}/restore` and `GET /api/tasks/deleted` to `src/TaskLane.Api/Tasks/TasksController.cs`. Declare `deleted` before `{id:guid}` so the routes don't clash. `DELETE` maps success to `NoContent()` with the existing `ToActionResult<T>` (no new overload: `Result` has no non-generic success). T035 must then pass (204 on success, 404 on error).
+- [X] T039 [P] [US3] Write failing Vitest tests:
   - **`frontend/src/shared/ui/ConfirmDialog.test.tsx`:**
     - opens as a modal dialog with a title, message, "Delete" and "Cancel";
     - Escape or Cancel closes it without confirming;
@@ -241,7 +241,7 @@ on its own.
     - while the request is pending, the dialog's "Delete" button and the "Restore" button are disabled with `aria-busy="true"` (FR-021).
   - **`frontend/src/features/tasks/EditTaskPage.test.tsx`:** a 409 → navigates to the read-only detail with "This task was deleted. Restore it to edit."; opening edit for a task that is already deleted redirects to its detail.
   - **`frontend/src/features/tasks/TaskListPage.test.tsx`:** in deleted mode the rows show the deletion date, the empty state is "No deleted tasks.", and there is a link between "Tasks" and "Deleted tasks".
-- [ ] T040 [US3] Implement the US3 SPA until T039 passes:
+- [X] T040 [US3] Implement the US3 SPA until T039 passes:
   - `deleteTask`, `restoreTask` and `listDeletedTasks` in `frontend/src/features/tasks/tasks-api.ts`.
   - `frontend/src/shared/ui/ConfirmDialog.tsx`, using the native `<dialog>` with `showModal`.
   - The deleted read-only mode in `frontend/src/features/tasks/TaskDetailPage.tsx` and 409 handling in `EditTaskPage.tsx`.
