@@ -30,7 +30,7 @@ export const BOARD_PAGE_SIZE = 20
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 /** Creation dates read newest first; due dates and titles read ascending. */
-export function defaultDirection(sort: SortField): SortDirection {
+function defaultDirection(sort: SortField): SortDirection {
   return sort === 'createdAt' ? 'desc' : 'asc'
 }
 
