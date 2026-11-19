@@ -6,6 +6,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using TaskLane.Application.Identity.GetProfile;
 using TaskLane.Application.Identity.Register;
 using TaskLane.Application.Identity.SignIn;
+using TaskLane.Application.Tasks.CreateTask;
+using TaskLane.Application.Tasks.ListTasks;
 
 namespace TaskLane.Application;
 
@@ -27,6 +29,12 @@ public static class DependencyInjection
         services.AddScoped<SignInHandler>();
 
         services.AddScoped<GetProfileHandler>();
+
+        services.AddSingleton<IValidator<CreateTaskCommand>, CreateTaskValidator>();
+        services.AddScoped<CreateTaskHandler>();
+
+        services.AddSingleton<IValidator<ListTasksQuery>, ListTasksValidator>();
+        services.AddScoped<ListTasksHandler>();
 
         return services;
     }
