@@ -1,6 +1,7 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { jsonResponse, stubFetch } from '../../test/fetch'
+import { jsonResponse, problemResponse, stubFetch } from '../../test/fetch'
 import { renderApp } from '../../test/render'
 import { signedIn } from '../../test/session'
 import { formatTimestamp } from './format'
@@ -9,7 +10,14 @@ import { aPage, aTask } from './test-data'
 const dueFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
 
 function stubList(page = aPage([])) {
-  return stubFetch((url) => (url.startsWith('/api/tasks') ? jsonResponse(page) : new Response(null, { status: 404 })))
+  return stubFetch((url) => {
+    if (url === '/api/tasks/settings') return jsonResponse({ dueDateRangeMaxDays: 90 })
+    return url.startsWith('/api/tasks') ? jsonResponse(page) : new Response(null, { status: 404 })
+  })
+}
+
+function listCalls(fetchMock: ReturnType<typeof stubFetch>) {
+  return fetchMock.mock.calls.map(([url]) => String(url)).filter((url) => url.startsWith('/api/tasks') && url !== '/api/tasks/settings')
 }
 
 describe('TaskListPage', () => {
@@ -149,6 +157,100 @@ describe('TaskListPage', () => {
 
       const nav = await screen.findByRole('navigation', { name: 'Pagination' })
       expect(within(nav).getByRole('link', { name: 'Page 2' })).toHaveAttribute('href', '/tasks/deleted?page=2')
+    })
+  })
+
+  describe('finding tasks', () => {
+    it('requests the list described by the address', async () => {
+      const fetchMock = stubList(aPage([aTask()]))
+      renderApp('/tasks?search=demo&status=Done&dueFrom=2026-12-01&dueTo=2026-12-31&sort=title&direction=desc&page=2')
+
+      await screen.findByRole('list', { name: 'Tasks' })
+      expect(listCalls(fetchMock)).toContain(
+        '/api/tasks?search=demo&status=Done&dueFrom=2026-12-01&dueTo=2026-12-31&sort=title&direction=desc&page=2',
+      )
+      expect(screen.getByLabelText('Search')).toHaveValue('demo')
+      expect(screen.getByLabelText('Status')).toHaveValue('Done')
+    })
+
+    it('ignores invalid values in the address', async () => {
+      const fetchMock = stubList(aPage([aTask()]))
+      renderApp('/tasks?status=Later&sort=priority&page=abc')
+
+      await screen.findByRole('list', { name: 'Tasks' })
+      expect(listCalls(fetchMock)).toEqual(['/api/tasks'])
+    })
+
+    it('shows the configured maximum range from the settings', async () => {
+      stubList(aPage([aTask()]))
+      renderApp('/tasks')
+
+      await waitFor(() => expect(screen.getByLabelText('Due to')).toHaveAccessibleDescription('Up to 90 days.'))
+    })
+
+    it('updates the address after the person stops typing a search', async () => {
+      vi.useRealTimers()
+      stubList(aPage([aTask()]))
+      const { router } = renderApp('/tasks?page=3')
+      const user = userEvent.setup()
+
+      await user.type(await screen.findByLabelText('Search'), 'demo')
+
+      expect(router.state.location.search).toBe('?page=3')
+      await waitFor(() => expect(router.state.location.search).toBe('?search=demo'), { timeout: 2000 })
+    })
+
+    it('applies a status filter to the address and resets the page', async () => {
+      stubList(aPage([aTask()]))
+      const { router } = renderApp('/tasks?page=3')
+      const user = userEvent.setup()
+
+      await user.selectOptions(await screen.findByLabelText('Status'), 'Done')
+
+      expect(router.state.location.search).toBe('?status=Done')
+    })
+
+    it('keeps the search and filters in the pagination links', async () => {
+      stubList(aPage([aTask()], { page: 1, pageSize: 20, totalCount: 30 }))
+      renderApp('/tasks?search=demo')
+
+      const nav = await screen.findByRole('navigation', { name: 'Pagination' })
+      expect(within(nav).getByRole('link', { name: 'Page 2' })).toHaveAttribute('href', '/tasks?search=demo&page=2')
+    })
+
+    it('distinguishes "no match" from "no tasks" and offers to clear the search', async () => {
+      stubList(aPage([]))
+      const { router } = renderApp('/tasks?search=zzz&sort=title')
+      const user = userEvent.setup()
+
+      expect(await screen.findByText('No tasks match your search.')).toBeInTheDocument()
+      expect(screen.queryByText('You have no tasks yet.')).not.toBeInTheDocument()
+
+      const clearButtons = screen.getAllByRole('button', { name: 'Clear search and filters' })
+      await user.click(clearButtons.at(-1) as HTMLElement)
+
+      expect(router.state.location.search).toBe('?sort=title')
+    })
+
+    it('offers the same tools in the deleted list', async () => {
+      const fetchMock = stubList(aPage([aTask({ deletedAt: '2026-11-17T10:00:00+00:00' })]))
+      renderApp('/tasks/deleted?search=demo&sort=deletedAt&direction=asc')
+
+      await screen.findByRole('list', { name: 'Deleted tasks' })
+      expect(listCalls(fetchMock)).toContain('/api/tasks/deleted?search=demo&direction=asc')
+      expect(screen.getByLabelText('Search')).toBeInTheDocument()
+      expect(screen.getByLabelText('Sort by')).toHaveValue('deletedAt')
+      expect(screen.getByLabelText('Due from')).toBeInTheDocument()
+    })
+
+    it('shows the reason when the API refuses the query', async () => {
+      stubFetch((url) => {
+        if (url === '/api/tasks/settings') return jsonResponse({ dueDateRangeMaxDays: 30 })
+        return problemResponse(400, { errors: { dueTo: ['Choose a range of at most 30 days.'] } })
+      })
+      renderApp('/tasks?dueFrom=2026-01-01&dueTo=2026-03-01')
+
+      expect(await screen.findByRole('alert')).toHaveTextContent('Choose a range of at most 30 days.')
     })
   })
 })
