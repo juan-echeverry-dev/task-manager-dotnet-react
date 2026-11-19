@@ -7,7 +7,7 @@ namespace TaskLane.Api.Tests.Tasks;
 /// <summary>Drives the Tasks endpoints the way the SPA does, with a bearer token.</summary>
 internal static class TasksClient
 {
-    public static Task<HttpResponseMessage> SendAsync(
+    public static async Task<HttpResponseMessage> SendAsync(
         this HttpClient client, HttpMethod method, string path, string? accessToken, object? body = null)
     {
         using var request = new HttpRequestMessage(method, path);
@@ -21,7 +21,8 @@ internal static class TasksClient
             request.Content = JsonContent.Create(body);
         }
 
-        return client.SendAsync(request, TestContext.Current.CancellationToken);
+        // Awaited here: the request (and its content) must outlive the call.
+        return await client.SendAsync(request, TestContext.Current.CancellationToken);
     }
 
     public static Task<HttpResponseMessage> CreateTaskAsync(this HttpClient client, string? accessToken, object body) =>
