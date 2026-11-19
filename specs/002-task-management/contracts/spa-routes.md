@@ -1,5 +1,7 @@
 # Contract: SPA routes and behavior for tasks
 
+> **Amended by [spec 003](../../003-permanent-task-deletion/spec.md)**: deletion is permanent; the deleted-tasks list and restore were removed.
+
 All routes below are protected by `RequireAuth` (feature 001).
 
 ## Routes

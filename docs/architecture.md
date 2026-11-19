@@ -72,7 +72,7 @@ sequenceDiagram
 | Module | Purpose | Status |
 |---|---|---|
 | Identity | Registration, sign-in, JWT issuing, current-user profile, demo account | Implemented by [`specs/001-user-authentication`](../specs/001-user-authentication/spec.md) |
-| Tasks | Create, view, edit, soft-delete and restore one's own tasks; search, filters, sort and paging | Implemented by [`specs/002-task-management`](../specs/002-task-management/spec.md) |
+| Tasks | Create, view, edit and permanently delete one's own tasks; search, filters, sort and paging | Implemented by [`specs/002-task-management`](../specs/002-task-management/spec.md), amended by [`specs/003-permanent-task-deletion`](../specs/003-permanent-task-deletion/spec.md) |
 
 ### Identity module
 
@@ -113,10 +113,10 @@ Modules interact only through public contracts (e.g. the authenticated user id c
 
 | Layer | Contents |
 |---|---|
-| Domain | `Tasks/TaskItem` (named to avoid `System.Threading.Tasks.Task`) and `TaskItemStatus`: invariants, any status transition, soft delete and restore |
-| Application | Port `ITaskRepository` with `TaskListQuery`; slices `CreateTask`, `GetTask`, `UpdateTask`, `DeleteTask`, `RestoreTask`, `ListTasks` (active or deleted); `TaskFieldRules` shared by the create and edit validators; `TaskListOptions` (configurable range limit) |
-| Infrastructure | `TaskRepository` (owner-scoped queries, `LIKE` search with escaping, filters, sort, paging), `TaskItemConfiguration` (FK to `Users` with cascade, UTC-tick timestamps, owner indexes), `DemoTasksSeeder` |
-| Api | `TasksController`: `GET/POST /api/tasks`, `GET /api/tasks/deleted`, `GET /api/tasks/settings`, `GET/PUT/DELETE /api/tasks/{id}`, `POST /api/tasks/{id}/restore` ([contract](../specs/002-task-management/contracts/tasks-api.md)) |
+| Domain | `Tasks/TaskItem` (named to avoid `System.Threading.Tasks.Task`) and `TaskItemStatus`: invariants and any status transition |
+| Application | Port `ITaskRepository` with `TaskListQuery`; slices `CreateTask`, `GetTask`, `UpdateTask`, `DeleteTask` (permanent), `ListTasks`; `TaskFieldRules` shared by the create and edit validators; `TaskListOptions` (configurable range limit) |
+| Infrastructure | `TaskRepository` (owner-scoped queries and delete, `LIKE` search with escaping, filters, sort, paging), `TaskItemConfiguration` (FK to `Users` with cascade, UTC-tick timestamps, owner indexes), `DemoTasksSeeder` |
+| Api | `TasksController`: `GET/POST /api/tasks`, `GET /api/tasks/settings`, `GET/PUT/DELETE /api/tasks/{id}` ([contract](../specs/002-task-management/contracts/tasks-api.md), [changes in 003](../specs/003-permanent-task-deletion/contracts/tasks-api.md)) |
 
 **Module boundary**: Tasks knows a person only by the owner id taken from the `sub` claim
 (`ClaimsPrincipalExtensions.GetUserId`). `ModuleBoundaryTests` fails the build if Tasks types in

@@ -231,21 +231,21 @@ active tasks unchanged.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T035 [P] Write `docs/adr/0011-permanent-task-deletion.md`:
+- [X] T035 [P] Write `docs/adr/0011-permanent-task-deletion.md`:
   - Status Accepted, date 2026-11-19.
   - Context: the soft delete of spec 002.
   - Decision: permanent deletion, with the cleanup migration.
   - Alternatives: keep the soft delete; add an undo period.
   - Consequences: no recovery, and `DELETE` answers `404` on a repeat.
   - Add the row to `docs/adr/README.md`.
-- [ ] T036 [P] Add an "Amended by [spec 003](../003-permanent-task-deletion/spec.md): deletion is permanent; deleted-tasks list and restore removed." banner below the title of `specs/002-task-management/spec.md`, `plan.md`, `data-model.md`, `contracts/tasks-api.md` and `contracts/spa-routes.md`
-- [ ] T037 [P] Search `README.md`, `docs/` and `frontend/src` for "restore", "Deleted tasks" and "deletedAt", and update any leftover mention outside `specs/002-*` and migrations
-- [ ] T038 Run the full gate:
+- [X] T036 [P] Add an "Amended by [spec 003](../003-permanent-task-deletion/spec.md): deletion is permanent; deleted-tasks list and restore removed." banner below the title of `specs/002-task-management/spec.md`, `plan.md`, `data-model.md`, `contracts/tasks-api.md` and `contracts/spa-routes.md`
+- [X] T037 [P] Search `README.md`, `docs/` and `frontend/src` for "restore", "Deleted tasks" and "deletedAt", and update any leftover mention outside `specs/002-*` and migrations
+- [X] T038 Run the full gate:
   - `dotnet build TaskLane.slnx` (0 warnings).
   - `dotnet format TaskLane.slnx --verify-no-changes`.
   - `./scripts/test-coverage.ps1` (≥ 90 % Domain + Application, ≥ 80 % overall).
   - `cd frontend; npm run check`.
-- [ ] T039 Run the manual walkthrough and the migration check in `specs/003-permanent-task-deletion/quickstart.md` and report the results to the repository owner
+- [X] T039 Run the manual walkthrough and the migration check in `specs/003-permanent-task-deletion/quickstart.md` and report the results to the repository owner
 
 ---
 
