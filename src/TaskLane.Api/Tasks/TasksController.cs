@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using TaskLane.Api.Common;
 using TaskLane.Application.Tasks;
 using TaskLane.Application.Tasks.CreateTask;
+using TaskLane.Application.Tasks.DeleteTask;
 using TaskLane.Application.Tasks.GetTask;
 using TaskLane.Application.Tasks.ListTasks;
+using TaskLane.Application.Tasks.RestoreTask;
 using TaskLane.Application.Tasks.UpdateTask;
 
 namespace TaskLane.Api.Tasks;
@@ -21,25 +23,25 @@ public sealed class TasksController : ControllerBase
     [HttpGet]
     [ProducesResponseType<PagedResult<TaskResponse>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
-    public async Task<IActionResult> List(
+    public Task<IActionResult> List(
+        [FromQuery] string? sort,
         [FromQuery] int? page,
         [FromQuery] int? pageSize,
         [FromServices] ListTasksHandler handler,
-        CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(handler);
+        CancellationToken cancellationToken) =>
+        ListAsync(deleted: false, sort, page, pageSize, handler, cancellationToken);
 
-        if (User.GetUserId() is not { } ownerId)
-        {
-            return InvalidSession();
-        }
-
-        var result = await handler.HandleAsync(
-            new ListTasksQuery(ownerId, Deleted: false, null, null, null, null, null, null, page, pageSize),
-            cancellationToken);
-
-        return result.ToActionResult(Ok);
-    }
+    // Declared before "{id:guid}" for readability; the guid constraint already keeps the routes apart.
+    [HttpGet("deleted")]
+    [ProducesResponseType<PagedResult<TaskResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
+    public Task<IActionResult> ListDeleted(
+        [FromQuery] string? sort,
+        [FromQuery] int? page,
+        [FromQuery] int? pageSize,
+        [FromServices] ListTasksHandler handler,
+        CancellationToken cancellationToken) =>
+        ListAsync(deleted: true, sort, page, pageSize, handler, cancellationToken);
 
     [HttpPost]
     [ProducesResponseType<TaskResponse>(StatusCodes.Status201Created)]
@@ -105,6 +107,68 @@ public sealed class TasksController : ControllerBase
 
         var result = await handler.HandleAsync(
             new UpdateTaskCommand(ownerId, id, request.Title ?? string.Empty, request.Description, request.Status, request.DueDate),
+            cancellationToken);
+
+        return result.ToActionResult(Ok);
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        [FromServices] DeleteTaskHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        if (User.GetUserId() is not { } ownerId)
+        {
+            return InvalidSession();
+        }
+
+        var result = await handler.HandleAsync(new DeleteTaskCommand(ownerId, id), cancellationToken);
+
+        return result.ToActionResult(_ => NoContent());
+    }
+
+    [HttpPost("{id:guid}/restore")]
+    [ProducesResponseType<TaskResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Restore(
+        Guid id,
+        [FromServices] RestoreTaskHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        if (User.GetUserId() is not { } ownerId)
+        {
+            return InvalidSession();
+        }
+
+        var result = await handler.HandleAsync(new RestoreTaskCommand(ownerId, id), cancellationToken);
+
+        return result.ToActionResult(Ok);
+    }
+
+    private async Task<IActionResult> ListAsync(
+        bool deleted,
+        string? sort,
+        int? page,
+        int? pageSize,
+        ListTasksHandler handler,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+
+        if (User.GetUserId() is not { } ownerId)
+        {
+            return InvalidSession();
+        }
+
+        var result = await handler.HandleAsync(
+            new ListTasksQuery(ownerId, deleted, null, null, null, null, sort, null, page, pageSize),
             cancellationToken);
 
         return result.ToActionResult(Ok);
