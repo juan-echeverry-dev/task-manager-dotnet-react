@@ -23,7 +23,7 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
         var tasks = Filter(
             context.Tasks.AsNoTracking()
                 .Where(task => task.OwnerId == ownerId)
-                .Where(task => query.Deleted ? task.DeletedAt != null : task.DeletedAt == null),
+                .Where(task => task.DeletedAt == null),
             query);
 
         var totalCount = await tasks.CountAsync(cancellationToken);
@@ -120,9 +120,6 @@ internal sealed class TaskRepository(AppDbContext context) : ITaskRepository
             TaskSortField.Title => descending
                 ? tasks.OrderByDescending(task => EF.Functions.Collate(task.Title, "NOCASE"))
                 : tasks.OrderBy(task => EF.Functions.Collate(task.Title, "NOCASE")),
-            TaskSortField.DeletedAt => descending
-                ? tasks.OrderByDescending(task => task.DeletedAt)
-                : tasks.OrderBy(task => task.DeletedAt),
             _ => throw new ArgumentOutOfRangeException(nameof(query), query.Sort, "Unknown sort field."),
         };
 

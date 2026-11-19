@@ -26,7 +26,6 @@ public sealed class CreateAndListTasksTests(ApiFactory factory) : IClassFixture<
         task.GetProperty("dueDate").ValueKind.ShouldBe(JsonValueKind.Null);
         task.GetProperty("createdAt").GetDateTimeOffset().ShouldBe(factory.TimeProvider.GetUtcNow());
         task.GetProperty("updatedAt").GetDateTimeOffset().ShouldBe(factory.TimeProvider.GetUtcNow());
-        task.GetProperty("deletedAt").ValueKind.ShouldBe(JsonValueKind.Null);
         task.TryGetProperty("ownerId", out _).ShouldBeFalse();
     }
 

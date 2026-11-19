@@ -7,7 +7,7 @@ using TaskLane.Application.Tasks.Ports;
 namespace TaskLane.Application.Tasks.UpdateTask;
 
 /// <summary>
-/// Replaces the editable values of one of the signed-in person's active tasks (spec FR-011, FR-015).
+/// Replaces the editable values of one of the signed-in person's tasks (spec FR-011).
 /// The last save wins.
 /// </summary>
 public sealed class UpdateTaskHandler(
@@ -29,11 +29,6 @@ public sealed class UpdateTaskHandler(
         if (task is null)
         {
             return Result.Failure<TaskResponse>(TaskErrors.NotFound);
-        }
-
-        if (task.IsDeleted)
-        {
-            return Result.Failure<TaskResponse>(TaskErrors.Deleted);
         }
 
         // The validator guarantees a known status here.

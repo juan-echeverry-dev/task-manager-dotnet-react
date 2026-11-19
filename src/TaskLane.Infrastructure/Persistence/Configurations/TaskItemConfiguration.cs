@@ -49,8 +49,6 @@ internal sealed class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.Property(task => task.DeletedAt)
             .HasConversion(new UtcTicksConverter());
 
-        builder.Ignore(task => task.IsDeleted);
-
         // Cover the default order of both lists, scoped to the owner.
         builder.HasIndex(task => new { task.OwnerId, task.DeletedAt, task.DueDate })
             .HasDatabaseName("IX_Tasks_OwnerId_DeletedAt_DueDate");

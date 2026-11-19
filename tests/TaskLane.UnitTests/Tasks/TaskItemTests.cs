@@ -29,8 +29,6 @@ public sealed class TaskItemTests
         task.DueDate.ShouldBeNull();
         task.CreatedAt.ShouldBe(Now);
         task.UpdatedAt.ShouldBe(Now);
-        task.DeletedAt.ShouldBeNull();
-        task.IsDeleted.ShouldBeFalse();
     }
 
     [Fact]
@@ -187,75 +185,5 @@ public sealed class TaskItemTests
         Should.Throw<ArgumentException>(() => task.Update("Title", null, (TaskItemStatus)42, null, Later));
         Should.Throw<ArgumentException>(() =>
             task.Update("Title", null, TaskItemStatus.ToDo, null, Later.ToOffset(TimeSpan.FromHours(2))));
-    }
-
-    [Fact]
-    public void Update_OnDeletedTask_Throws()
-    {
-        var task = CreateTask();
-        task.Delete(Later);
-
-        Should.Throw<InvalidOperationException>(() =>
-            task.Update("New", null, TaskItemStatus.Done, null, Later.AddMinutes(1)));
-        task.Title.ShouldBe("Prepare demo");
-    }
-
-    [Fact]
-    public void Delete_SetsDeletedAt()
-    {
-        var task = CreateTask();
-
-        task.Delete(Later);
-
-        task.DeletedAt.ShouldBe(Later);
-        task.IsDeleted.ShouldBeTrue();
-        task.UpdatedAt.ShouldBe(Now);
-    }
-
-    [Fact]
-    public void Delete_WhenAlreadyDeleted_DoesNothing()
-    {
-        var task = CreateTask();
-        task.Delete(Later);
-
-        task.Delete(Later.AddHours(1));
-
-        task.DeletedAt.ShouldBe(Later);
-    }
-
-    [Fact]
-    public void Delete_WithNonUtcTime_Throws()
-    {
-        var task = CreateTask();
-
-        Should.Throw<ArgumentException>(() => task.Delete(Later.ToOffset(TimeSpan.FromHours(1))));
-    }
-
-    [Fact]
-    public void Restore_ClearsDeletedAtAndKeepsValues()
-    {
-        var task = CreateTask("Title", "Description", TaskItemStatus.InProgress, new DateOnly(2026, 12, 1));
-        task.Delete(Later);
-
-        task.Restore();
-
-        task.DeletedAt.ShouldBeNull();
-        task.IsDeleted.ShouldBeFalse();
-        task.UpdatedAt.ShouldBe(Now);
-        task.Title.ShouldBe("Title");
-        task.Description.ShouldBe("Description");
-        task.Status.ShouldBe(TaskItemStatus.InProgress);
-        task.DueDate.ShouldBe(new DateOnly(2026, 12, 1));
-    }
-
-    [Fact]
-    public void Restore_WhenActive_DoesNothing()
-    {
-        var task = CreateTask();
-
-        task.Restore();
-
-        task.DeletedAt.ShouldBeNull();
-        task.UpdatedAt.ShouldBe(Now);
     }
 }

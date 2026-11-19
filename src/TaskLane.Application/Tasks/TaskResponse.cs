@@ -13,8 +13,7 @@ public sealed record TaskResponse(
     TaskItemStatus Status,
     DateOnly? DueDate,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt,
-    DateTimeOffset? DeletedAt)
+    DateTimeOffset UpdatedAt)
 {
     public static TaskResponse From(TaskItem task)
     {
@@ -27,7 +26,6 @@ public sealed record TaskResponse(
             task.Status,
             task.DueDate,
             task.CreatedAt,
-            task.UpdatedAt,
-            task.DeletedAt);
+            task.UpdatedAt);
     }
 }

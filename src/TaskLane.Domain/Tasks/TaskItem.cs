@@ -36,8 +36,6 @@ public sealed class TaskItem
 
     public DateTimeOffset? DeletedAt { get; private set; }
 
-    public bool IsDeleted => DeletedAt is not null;
-
     public static TaskItem Create(
         Guid id,
         Guid ownerId,
@@ -71,29 +69,13 @@ public sealed class TaskItem
         return task;
     }
 
-    /// <summary>Replaces the four editable values. A deleted task must be restored first.</summary>
+    /// <summary>Replaces the four editable values.</summary>
     public void Update(string title, string? description, TaskItemStatus status, DateOnly? dueDate, DateTimeOffset now)
     {
-        if (IsDeleted)
-        {
-            throw new InvalidOperationException("A deleted task cannot be edited; restore it first.");
-        }
-
         EnsureUtc(now, nameof(now));
         SetValues(title, description, status, dueDate);
         UpdatedAt = now;
     }
-
-    /// <summary>Moves the task to the deleted state. Does nothing if it is already deleted.</summary>
-    public void Delete(DateTimeOffset now)
-    {
-        EnsureUtc(now, nameof(now));
-
-        DeletedAt ??= now;
-    }
-
-    /// <summary>Returns the task to the active state with its values unchanged. Does nothing if it is active.</summary>
-    public void Restore() => DeletedAt = null;
 
     private void SetValues(string title, string? description, TaskItemStatus status, DateOnly? dueDate)
     {

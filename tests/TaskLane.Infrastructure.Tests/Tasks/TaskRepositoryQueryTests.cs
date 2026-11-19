@@ -148,27 +148,6 @@ public sealed class TaskRepositoryQueryTests : IAsyncLifetime
         Titles(page).ShouldBe(expected);
     }
 
-    [Theory]
-    [InlineData(TaskSortDirection.Ascending, new[] { "Deleted first", "Deleted last" })]
-    [InlineData(TaskSortDirection.Descending, new[] { "Deleted last", "Deleted first" })]
-    public async Task SortByDeletedAt_FollowsTheDirection(TaskSortDirection direction, string[] expected)
-    {
-        var first = Task("Deleted first");
-        var last = Task("Deleted last");
-        first.Delete(Now.AddHours(1));
-        last.Delete(Now.AddHours(2));
-        await SaveAsync(first, last);
-
-        var page = await ListAsync(TaskListQuery.Default with
-        {
-            Deleted = true,
-            Sort = TaskSortField.DeletedAt,
-            Direction = direction,
-        });
-
-        Titles(page).ShouldBe(expected);
-    }
-
     [Fact]
     public async Task Ties_AreBrokenByNewestCreatedThenId()
     {
@@ -180,30 +159,6 @@ public sealed class TaskRepositoryQueryTests : IAsyncLifetime
         var page = await ListAsync(TaskListQuery.Default with { Sort = TaskSortField.Title });
 
         page.Items.Select(task => task.Id).ShouldBe([newer.Id, olderA.Id, olderB.Id]);
-    }
-
-    [Fact]
-    public async Task DeletedList_SupportsTheSameFilters()
-    {
-        var match = Task("Demo deleted", status: TaskItemStatus.Done, dueDate: new DateOnly(2026, 12, 10));
-        var otherStatus = Task("Demo deleted too", dueDate: new DateOnly(2026, 12, 10));
-        var active = Task("Demo active", status: TaskItemStatus.Done, dueDate: new DateOnly(2026, 12, 10));
-        match.Delete(Now);
-        otherStatus.Delete(Now);
-        await SaveAsync(match, otherStatus, active);
-
-        var page = await ListAsync(TaskListQuery.Default with
-        {
-            Deleted = true,
-            Sort = TaskSortField.DeletedAt,
-            Direction = TaskSortDirection.Descending,
-            Search = "demo",
-            Status = TaskItemStatus.Done,
-            DueFrom = new DateOnly(2026, 12, 1),
-            DueTo = new DateOnly(2026, 12, 31),
-        });
-
-        Titles(page).ShouldBe(["Demo deleted"]);
     }
 
     [Fact]

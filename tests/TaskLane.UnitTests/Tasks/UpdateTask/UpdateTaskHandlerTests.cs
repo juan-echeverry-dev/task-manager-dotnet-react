@@ -79,20 +79,6 @@ public sealed class UpdateTaskHandlerTests
     }
 
     [Fact]
-    public async Task DeletedTask_ReturnsConflictWithoutChanges()
-    {
-        _task.Delete(CreatedAt.AddMinutes(30));
-
-        var result = await _handler.HandleAsync(Command(), TestContext.Current.CancellationToken);
-
-        result.Error!.Type.ShouldBe(ErrorType.Conflict);
-        result.Error.Title.ShouldBe("Task is deleted");
-        result.Error.Detail.ShouldBe("Restore the task before editing it.");
-        _task.Title.ShouldBe("Prepare demo");
-        await _tasks.DidNotReceiveWithAnyArgs().UpdateAsync(default!, TestContext.Current.CancellationToken);
-    }
-
-    [Fact]
     public async Task InvalidCommand_ReturnsValidationErrorWithoutLookingUpTheTask()
     {
         var result = await _handler.HandleAsync(Command(status: "Later"), TestContext.Current.CancellationToken);

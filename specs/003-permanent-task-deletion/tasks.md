@@ -140,12 +140,12 @@ reach them.
 
 ### Tests for User Story 2 (write first, must fail)
 
-- [ ] T016 [P] [US2] Create `tests/TaskLane.Api.Tests/Tasks/RemovedEndpointsTests.cs` (spec US2 scenario 4):
+- [X] T016 [P] [US2] Create `tests/TaskLane.Api.Tests/Tasks/RemovedEndpointsTests.cs` (spec US2 scenario 4):
   - `GET /api/tasks/deleted` answers `404`, and so does `POST /api/tasks/{id}/restore` on an existing task.
   - `GET /api/tasks?sort=deletedAt` answers `400` with "Sort must be one of: dueDate, createdAt, title.".
   - The JSON of `GET /api/tasks/{id}` has no `deletedAt` property.
-- [ ] T017 [P] [US2] Update `tests/TaskLane.UnitTests/Tasks/ListTasks/ListTasksValidatorTests.cs` and `ListTasksHandlerTests.cs`: `deletedAt` is rejected as a sort field, and the queries have no `Deleted` flag
-- [ ] T018 [P] [US2] Update the frontend tests:
+- [X] T017 [P] [US2] Update `tests/TaskLane.UnitTests/Tasks/ListTasks/ListTasksValidatorTests.cs` and `ListTasksHandlerTests.cs`: `deletedAt` is rejected as a sort field, and the queries have no `Deleted` flag
+- [X] T018 [P] [US2] Update the frontend tests:
   - `frontend/src/features/tasks/TaskListPage.test.tsx`: no "Deleted tasks" link; the sort options are exactly Due date, Created and Title.
   - `frontend/src/app/routes.test.tsx`: `/tasks/deleted` shows "Task not found" with "Back to tasks".
   - `frontend/src/features/tasks/TaskDetailPage.test.tsx`: no "Restore" button.
@@ -153,36 +153,36 @@ reach them.
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Delete `src/TaskLane.Application/Tasks/RestoreTask/` and `tests/TaskLane.UnitTests/Tasks/RestoreTask/`; remove `RestoreTaskHandler` registration from `src/TaskLane.Application/DependencyInjection.cs`
-- [ ] T020 [US2] Remove `TaskErrors.Deleted` from `src/TaskLane.Application/Tasks/TaskErrors.cs` and the `IsDeleted` check from `src/TaskLane.Application/Tasks/UpdateTask/UpdateTaskHandler.cs` (and its unit test)
-- [ ] T021 [US2] Remove the deleted list from Application:
+- [X] T019 [US2] Delete `src/TaskLane.Application/Tasks/RestoreTask/` and `tests/TaskLane.UnitTests/Tasks/RestoreTask/`; remove `RestoreTaskHandler` registration from `src/TaskLane.Application/DependencyInjection.cs`
+- [X] T020 [US2] Remove `TaskErrors.Deleted` from `src/TaskLane.Application/Tasks/TaskErrors.cs` and the `IsDeleted` check from `src/TaskLane.Application/Tasks/UpdateTask/UpdateTaskHandler.cs` (and its unit test)
+- [X] T021 [US2] Remove the deleted list from Application:
   - `src/TaskLane.Application/Tasks/Ports/TaskListQuery.cs`: remove `Deleted` and `TaskSortField.DeletedAt`.
   - `ListTasks/ListTasksQuery.cs`: remove `Deleted`.
   - `ListTasks/ListSorting.cs`: one field set (`dueDate`, `createdAt`, `title`), default `DueDate`; only `CreatedAt` defaults to descending.
   - `ListTasks/ListTasksValidator.cs` and `ListTasks/ListTasksHandler.cs`: drop the `deleted` parameter.
   - Update the XML docs (T017 passes).
-- [ ] T022 [US2] Remove `DeletedAt` from `src/TaskLane.Application/Tasks/TaskResponse.cs`; update `GetTask/GetTaskHandler.cs` doc ("existing task")
-- [ ] T023 [US2] In `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs`, remove the `query.Deleted` branch (keep `DeletedAt == null` until US3) and the `TaskSortField.DeletedAt` ordering case. In the same change, so the solution compiles after T021, **remove** (do not rewrite) the deleted-list tests:
+- [X] T022 [US2] Remove `DeletedAt` from `src/TaskLane.Application/Tasks/TaskResponse.cs`; update `GetTask/GetTaskHandler.cs` doc ("existing task")
+- [X] T023 [US2] In `src/TaskLane.Infrastructure/Tasks/TaskRepository.cs`, remove the `query.Deleted` branch (keep `DeletedAt == null` until US3) and the `TaskSortField.DeletedAt` ordering case. In the same change, so the solution compiles after T021, **remove** (do not rewrite) the deleted-list tests:
   - In `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryQueryTests.cs`: `SortByDeletedAt_FollowsTheDirection` and the deleted-list filter test, the one with `Deleted = true` near line 197.
   - In `tests/TaskLane.Infrastructure.Tests/Tasks/TaskRepositoryTests.cs`: the deleted-list query field (line 20) and every test that lists deleted tasks or calls `Delete` (around lines 52, 142–144, 157 and 174).
   - Ownership and "not found" cases among them are already covered by T002 (`DeleteOwnedAsync`).
-- [ ] T024 [US2] In `src/TaskLane.Api/Tasks/TasksController.cs`:
+- [X] T024 [US2] In `src/TaskLane.Api/Tasks/TasksController.cs`:
   - Remove `ListDeleted`, `Restore`, the `409` `ProducesResponseType` on `Update`, and the `deleted` parameter of `ListAsync`.
   - Delete `tests/TaskLane.Api.Tests/Tasks/DeleteAndRestoreTaskTests.cs` (fully replaced by T007 and T016).
   - Fix `FindTasksTests.cs` and `CreateAndListTasksTests.cs` (T016 passes).
-- [ ] T025 [US2] Remove `Delete(now)`, `Restore()` and `IsDeleted` from `src/TaskLane.Domain/Tasks/TaskItem.cs`, and the `Update` deleted guard. Remove the tests that used them:
+- [X] T025 [US2] Remove `Delete(now)`, `Restore()` and `IsDeleted` from `src/TaskLane.Domain/Tasks/TaskItem.cs`, and the `Update` deleted guard. Remove the tests that used them:
   - `tests/TaskLane.UnitTests/Tasks/TaskItemTests.cs`: the delete, restore and "cannot edit when deleted" cases.
   - `tests/TaskLane.Infrastructure.Tests/Tasks/TaskPersistenceTests.cs`: the `DeletedAt` round-trip (around lines 23–41) and the ordering by `DeletedAt` (around lines 84–94).
   - `tests/TaskLane.Infrastructure.Tests/Tasks/DemoTasksSeederTests.cs`: the test that does not re-seed when the account has only deleted tasks (around lines 72–82). The behavior changes on purpose (spec 003, Assumptions: demo tasks come back after deleting them all), so replace it with a test asserting that an account whose tasks were all removed is seeded again.
 
   Soft-deleted rows are no longer built through the domain anywhere. Only T031 creates one, by raw SQL.
-- [ ] T026 [P] [US2] In `frontend/src/features/tasks/tasks-api.ts`, remove `deletedAt` from `Task`, and remove `listDeletedTasks` and `restoreTask`; update `tasks-api.test.ts` and `test-data.ts`
-- [ ] T027 [US2] In `frontend/src/features/tasks/task-query.ts`, remove `TaskListMode` and the `deletedAt` sort, and drop the mode parameters from `sortFields`, `defaultTaskQuery`, `parseTaskQuery`, `serializeTaskQuery` and `toApiParams`
-- [ ] T028 [US2] Simplify `frontend/src/features/tasks/TaskListPage.tsx` and `TaskFilters.tsx`:
+- [X] T026 [P] [US2] In `frontend/src/features/tasks/tasks-api.ts`, remove `deletedAt` from `Task`, and remove `listDeletedTasks` and `restoreTask`; update `tasks-api.test.ts` and `test-data.ts`
+- [X] T027 [US2] In `frontend/src/features/tasks/task-query.ts`, remove `TaskListMode` and the `deletedAt` sort, and drop the mode parameters from `sortFields`, `defaultTaskQuery`, `parseTaskQuery`, `serializeTaskQuery` and `toApiParams`
+- [X] T028 [US2] Simplify `frontend/src/features/tasks/TaskListPage.tsx` and `TaskFilters.tsx`:
   - Use a single mode: remove `MODES`, the `mode` prop, the "Deleted tasks" and "Back to tasks" links, and the `deletedAt` display in `TaskRow`.
   - Use the query key `['tasks', 'list', params, accessToken]`.
-- [ ] T029 [US2] In `frontend/src/features/tasks/TaskDetailPage.tsx`, remove `RestoreAction`, the deleted branch and the "Deleted on" line. In `EditTaskPage.tsx`, remove the `deletedAt` redirect and the `409` handling. In `messages.ts`, remove `restored` and `deletedRestoreToEdit`
-- [ ] T030 [US2] Remove the `tasks/deleted` route from `frontend/src/app/routes.tsx` (T018 passes); run `cd frontend; npm run check`
+- [X] T029 [US2] In `frontend/src/features/tasks/TaskDetailPage.tsx`, remove `RestoreAction`, the deleted branch and the "Deleted on" line. In `EditTaskPage.tsx`, remove the `deletedAt` redirect and the `409` handling. In `messages.ts`, remove `restored` and `deletedRestoreToEdit`
+- [X] T030 [US2] Remove the `tasks/deleted` route from `frontend/src/app/routes.tsx` (T018 passes); run `cd frontend; npm run check`
 
 **Checkpoint**: Nothing in the product refers to deleted tasks; the column still exists but is unused
 except as a filter.

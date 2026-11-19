@@ -16,9 +16,6 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
     private Guid _owner;
     private Guid _otherOwner;
 
-    private static readonly TaskListQuery DeletedDefault =
-        TaskListQuery.Default with { Deleted = true, Sort = TaskSortField.DeletedAt, Direction = TaskSortDirection.Descending };
-
     private static CancellationToken CancellationToken => TestContext.Current.CancellationToken;
 
     public async ValueTask InitializeAsync()
@@ -45,12 +42,10 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ListAsync_ReturnsOnlyTheOwnersActiveTasks()
+    public async Task ListAsync_ReturnsOnlyTheOwnersTasks()
     {
         var mine = NewTask(_owner, "Mine");
-        var deleted = NewTask(_owner, "Deleted");
-        deleted.Delete(Now);
-        await SaveAsync(mine, deleted, NewTask(_otherOwner, "Theirs"));
+        await SaveAsync(mine, NewTask(_otherOwner, "Theirs"));
 
         var page = await ListAsync(TaskListQuery.Default);
 
@@ -133,47 +128,9 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task ListAsync_DeletedList_ReturnsOnlyTheOwnersDeletedTasksMostRecentlyDeletedFirst()
-    {
-        var active = NewTask(_owner, "Active");
-        var deletedFirst = NewTask(_owner, "Deleted first");
-        var deletedLast = NewTask(_owner, "Deleted last");
-        var theirs = NewTask(_otherOwner, "Theirs");
-        deletedFirst.Delete(Now.AddHours(1));
-        deletedLast.Delete(Now.AddHours(2));
-        theirs.Delete(Now.AddHours(3));
-        await SaveAsync(active, deletedFirst, deletedLast, theirs);
-
-        var page = await ListAsync(DeletedDefault);
-
-        page.Items.Select(task => task.Title).ShouldBe(["Deleted last", "Deleted first"]);
-        page.TotalCount.ShouldBe(2);
-    }
-
-    [Fact]
-    public async Task ListAsync_ActiveListAndCount_ExcludeDeletedTasks()
-    {
-        var deleted = NewTask(_owner, "Deleted");
-        deleted.Delete(Now);
-        await SaveAsync(NewTask(_owner, "One"), NewTask(_owner, "Two"), deleted);
-
-        var page = await ListAsync(TaskListQuery.Default);
-
-        page.Items.Select(task => task.Title).ShouldNotContain("Deleted");
-        page.TotalCount.ShouldBe(2);
-    }
-
-    [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task GetOwnedAsync_ReturnsTheOwnersTaskActiveOrDeleted(bool deleted)
+    public async Task GetOwnedAsync_ReturnsTheOwnersTask()
     {
         var task = NewTask(_owner, "Mine");
-        if (deleted)
-        {
-            task.Delete(Now);
-        }
-
         await SaveAsync(task);
 
         await using var context = _database.CreateContext();
@@ -181,7 +138,6 @@ public sealed class TaskRepositoryTests : IAsyncLifetime
 
         found.ShouldNotBeNull();
         found.Id.ShouldBe(task.Id);
-        found.IsDeleted.ShouldBe(deleted);
     }
 
     [Fact]

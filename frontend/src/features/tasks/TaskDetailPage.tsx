@@ -9,16 +9,13 @@ import { taskMessages, type TaskStatusState } from './messages'
 import { isOverdue, localToday } from './overdue'
 import { StatusMessage } from './StatusMessage'
 import { TaskNotFound } from './TaskNotFound'
-import { deleteTask, restoreTask, type Task } from './tasks-api'
+import { deleteTask, type Task } from './tasks-api'
 import { useTask } from './useTask'
 
 const actionClass =
   'rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600 disabled:cursor-not-allowed disabled:opacity-60'
 
-/**
- * Task detail (spec US2, US3). An active task offers Edit and Delete; a deleted task is read-only and
- * offers only Restore. Rendered only inside RequireAuth.
- */
+/** Task detail with Edit and Delete (spec US2; spec 003 US1). Rendered only inside RequireAuth. */
 export function TaskDetailPage() {
   const { id = '' } = useParams()
   const task = useTask(id)
@@ -59,34 +56,23 @@ interface TaskDetailsProps {
 }
 
 function TaskDetails({ task, accessToken, onActionFailed }: TaskDetailsProps) {
-  const deleted = task.deletedAt !== null
-
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <h1 className="break-words text-2xl font-semibold">{task.title}</h1>
-          {task.deletedAt ? (
-            <p className="text-sm font-medium text-red-800">Deleted on {formatTimestamp(task.deletedAt)}</p>
-          ) : null}
+        <h1 className="min-w-0 break-words text-2xl font-semibold">{task.title}</h1>
+        <div className="flex gap-2">
+          <Link to={`/tasks/${task.id}/edit`} className={actionClass}>
+            Edit
+          </Link>
+          <DeleteAction task={task} accessToken={accessToken} onFailed={onActionFailed} />
         </div>
-        {deleted ? (
-          <RestoreAction task={task} accessToken={accessToken} onFailed={onActionFailed} />
-        ) : (
-          <div className="flex gap-2">
-            <Link to={`/tasks/${task.id}/edit`} className={actionClass}>
-              Edit
-            </Link>
-            <DeleteAction task={task} accessToken={accessToken} onFailed={onActionFailed} />
-          </div>
-        )}
       </div>
 
       <dl className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
         <DetailRow label="Status">
           <span className="flex flex-wrap items-center gap-2">
             <StatusBadge status={task.status} />
-            {!deleted && isOverdue(task, localToday()) ? <OverdueBadge /> : null}
+            {isOverdue(task, localToday()) ? <OverdueBadge /> : null}
           </span>
         </DetailRow>
         <DetailRow label="Due date">{task.dueDate ? formatDate(task.dueDate) : 'No due date'}</DetailRow>
@@ -149,36 +135,6 @@ function DeleteAction({ task, accessToken, onFailed }: TaskActionProps) {
         onCancel={() => setConfirming(false)}
       />
     </>
-  )
-}
-
-function RestoreAction({ task, accessToken, onFailed }: TaskActionProps) {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const mutation = useMutation({ mutationFn: () => restoreTask(task.id, accessToken) })
-
-  const restore = async () => {
-    try {
-      await mutation.mutateAsync()
-    } catch {
-      onFailed()
-      return
-    }
-    await queryClient.invalidateQueries({ queryKey: ['tasks'] })
-    const state: TaskStatusState = { status: taskMessages.restored }
-    await navigate(`/tasks/${task.id}`, { replace: true, state })
-  }
-
-  return (
-    <button
-      type="button"
-      className={actionClass}
-      onClick={() => void restore()}
-      disabled={mutation.isPending}
-      aria-busy={mutation.isPending}
-    >
-      {mutation.isPending ? 'Restoring…' : 'Restore'}
-    </button>
   )
 }
 

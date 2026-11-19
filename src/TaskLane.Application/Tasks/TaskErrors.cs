@@ -7,7 +7,4 @@ internal static class TaskErrors
 {
     /// <summary>Same outcome for a missing task and another person's task (spec FR-002).</summary>
     public static Error NotFound { get; } = Error.NotFound("Task not found", "The task does not exist.");
-
-    /// <summary>A deleted task must be restored before it can be edited (spec FR-015).</summary>
-    public static Error Deleted { get; } = Error.Conflict("Task is deleted", "Restore the task before editing it.");
 }
